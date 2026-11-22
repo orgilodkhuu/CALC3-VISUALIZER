@@ -20,6 +20,25 @@ function useRoute() {
   return route
 }
 
+/**
+ * A tab plus its examples: picking an example merges its fields over the tab's defaults
+ * and restarts the scene with that setup.
+ */
+function ProblemPage({ tab }) {
+  const [ex, setEx] = useState(0)
+  const examples = tab.examples ?? []
+  const problem = { ...tab, ...(examples[ex] ?? {}) }
+  return (
+    <FunctionExplorer
+      key={ex}
+      problem={problem}
+      examples={examples}
+      exampleIndex={ex}
+      onExample={setEx}
+    />
+  )
+}
+
 const link = (t, p) => `#/${t.n}${p ? `/${encodeURIComponent(p.id)}` : ''}`
 
 export default function App() {
@@ -37,12 +56,11 @@ export default function App() {
         </button>
         <span className="topic-num">{topic.n}.</span>
         <h1>{topic.title}</h1>
-        {topic.problems && (
-          <nav className="tabs" aria-label="Problems">
+        {topic.problems?.length > 1 && (
+          <nav className="tabs" aria-label="Ideas in this topic">
             {topic.problems.map((p) => (
               <a key={p.id} href={link(topic, p)} className={p.id === problem?.id ? 'active' : ''}>
-                <b>{p.id}</b>
-                <span>{p.title}</span>
+                {p.title}
               </a>
             ))}
           </nav>
@@ -65,7 +83,7 @@ export default function App() {
 
       <main className="content">
         {problem ? (
-          <FunctionExplorer key={`${topic.n}/${problem.id}`} problem={problem} />
+          <ProblemPage key={`${topic.n}/${problem.id}`} tab={problem} />
         ) : (
           <div className="coming-soon">
             <h2>

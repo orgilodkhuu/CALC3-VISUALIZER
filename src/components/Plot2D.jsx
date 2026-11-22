@@ -111,7 +111,7 @@ export function CrossSectionPlot({ fn, axis, values, range, zr, colors = SLICE_C
       yr={zr}
       xLabel={other}
       yLabel="z"
-      title={title ?? `Cross sections ${axis} = constant`}
+      title={title ?? `Slices ${axis} = constant`}
     >
       {(s) => (
         <>
@@ -139,7 +139,7 @@ export function CrossSectionPlot({ fn, axis, values, range, zr, colors = SLICE_C
 }
 
 /** Contour map: level curves f = c on the xy-plane, each labeled with its height. */
-export function ContourPlot({ fn, xr, yr, levels, colors, children, title = 'Contour plot (level curves)' }) {
+export function ContourPlot({ fn, xr, yr, levels, colors, children, title = 'Contour plot' }) {
   const segs = useMemo(() => contourSegments(fn, xr, yr, levels, 160), [fn, xr, yr, levels])
   return (
     <Plot2D xr={xr} yr={yr} xLabel="x" yLabel="y" equal title={title}>

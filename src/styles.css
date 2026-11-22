@@ -43,22 +43,16 @@ button { font: inherit; }
 }
 .tabs { display: flex; gap: 6px; overflow-x: auto; margin-left: 10px; padding-bottom: 2px; }
 .tabs a {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 4px 12px;
+  padding: 7px 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
   text-decoration: none;
-  line-height: 1.15;
   white-space: nowrap;
+  font-weight: 600;
 }
-.tabs a b { font-size: 1rem; }
-.tabs a span { font-size: 0.75rem; color: var(--muted); }
 .tabs a:hover { background: var(--panel); }
 .tabs a.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-.tabs a.active span { color: #dfe8fb; }
 
 /* ---------- topic drawer ---------- */
 .scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.25); z-index: 30; }
@@ -259,8 +253,6 @@ button.reveal.on { border-color: var(--accent); color: var(--accent); }
 
 /* Projector widths (≤1400px): compact tabs so a topic's problems fit on one row. */
 @media (max-width: 1400px) {
-  .tabs a span { display: none; }
-  .tabs a { padding: 6px 12px; }
   :root { --panel-w: 300px; }
 }
 
@@ -289,3 +281,17 @@ button.chip.on { border-color: #e4572e; color: #b23d1b; font-weight: 600; }
 .secant-row { color: #b23d1b; }
 .exact-row { font-weight: 600; }
 .formula-row { color: #333; }
+
+/* ---------- simplified panel ---------- */
+.caption { margin: 0 0 14px; color: var(--muted); line-height: 1.45; font-size: 1.02rem; }
+.current-f { font-size: 1.25rem; margin: -4px 0 14px; overflow-x: auto; }
+.show-row { margin: 0 0 18px; align-items: center; }
+.chip-label { font-weight: 600; margin-right: 2px; }
+button.chip.on { border-color: var(--accent); color: var(--accent); font-weight: 600; background: #eef3fd; }
+.key-numbers { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; font-size: 1.15rem; }
+.key-numbers .muted, .muted { color: var(--muted); font-size: 1rem; }
+b.big { font-size: 1.35rem; }
+.math-block { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e3e7ec; line-height: 1.8; }
+details.more { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 10px; }
+details.more summary { cursor: pointer; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+details.more[open] summary { color: var(--text); }

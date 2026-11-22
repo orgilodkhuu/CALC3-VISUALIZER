@@ -68,7 +68,7 @@ export default function Viewer3D({
         <div className="viewer-overlay">
           {overlay}
           {zScale !== 1 && (
-            <div className="zscale-note">z axis squeezed ×{fmt(zScale, 2)} to fit (numbers are true values)</div>
+            <div className="zscale-note">z axis compressed to fit</div>
           )}
         </div>
       )}

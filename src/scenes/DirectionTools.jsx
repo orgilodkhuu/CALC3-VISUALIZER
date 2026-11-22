@@ -67,42 +67,56 @@ export function DirectionOverlay3D({ f, a, b, fx, fy, v, u, xr, yr, zr, secant =
 }
 
 /** 2D: the surface along v (z against distance s), with the secant and tangent line; readout. */
-export function DirectionPanels({ f, calc, a, b, fx, fy, v, u, xr, yr, zr, showFormulas }) {
+export function DirectionPanels({ f, calc, a, b, fx, fy, v, u, xr, yr, zr, math, secant = true }) {
   const d = directional(f, a, b, fx, fy, v)
   const [t0, t1] = lineInBox(a, b, u, xr, yr)
   const vtex = `(${fmt(v[0])},\\,${fmt(v[1])})`
   const sq = (c) => (c < 0 ? `(${fmt(c)})^2` : `${fmt(c)}^2`)
+  const end = `(${fmt(a + v[0])},\\, ${fmt(b + v[1])})`
   return (
     <>
       <div className="readout">
-        <div className="readout-head">
-          From <Tex>{`(a,b) = (${fmt(a, 2)},\\, ${fmt(b, 2)})`}</Tex> in direction <Tex>{`\\vec v = ${vtex}`}</Tex>
+        <div className="key-numbers">
+          <span>
+            Slope in direction <Tex>{`\\vec v = ${vtex}`}</Tex>: <b className="big">{fmt(d.exact)}</b>
+          </span>
         </div>
-        <div>
-          <Tex>{`\\Delta\\text{input} = \\|\\vec v\\| = \\sqrt{${sq(v[0])} + ${sq(v[1])}} = ${fmt(d.len)}`}</Tex>
-        </div>
-        {Number.isFinite(d.f1) ? (
+        {secant && (
           <div className="secant-row">
-            Using <Tex>{`f(${fmt(a + v[0])}, ${fmt(b + v[1])}) = ${fmt(d.f1)}`}</Tex>:{' '}
-            <Tex>{`\\frac{\\Delta\\text{output}}{\\Delta\\text{input}} = \\frac{${fmt(d.riseSecant)}}{${fmt(d.len)}} \\approx ${fmt(d.estimate)}`}</Tex>
-          </div>
-        ) : (
-          <div className="secant-row">
-            <Tex>{`f(${fmt(a + v[0])}, ${fmt(b + v[1])})`}</Tex> is undefined, so there is no secant estimate here.
+            {Number.isFinite(d.f1) ? (
+              <>
+                Secant estimate (to <Tex>{end}</Tex>): <b>{fmt(d.estimate)}</b>
+              </>
+            ) : (
+              <>
+                No secant estimate: <Tex>{`f${end}`}</Tex> is undefined.
+              </>
+            )}
           </div>
         )}
-        <div className="exact-row">
-          On the tangent plane:{' '}
-          <Tex>{`f_{${vtex}}(a,b) = \\frac{f_x v_1 + f_y v_2}{\\|\\vec v\\|} = \\frac{(${fmt(fx)})(${fmt(v[0])}) + (${fmt(fy)})(${fmt(v[1])})}{${fmt(d.len)}} = ${fmt(d.exact)}`}</Tex>
-        </div>
-        {showFormulas && calc.fx && calc.fy && (
-          <div className="formula-row">
-            <Tex>{`f_x = ${calc.fx.tex}, \\quad f_y = ${calc.fy.tex}`}</Tex>
+        {math && (
+          <div className="math-block">
+            <div>
+              <Tex>{`\\Delta\\text{input} = \\|\\vec v\\| = \\sqrt{${sq(v[0])} + ${sq(v[1])}} = ${fmt(d.len)}`}</Tex>
+            </div>
+            {Number.isFinite(d.f1) && (
+              <div>
+                <Tex>{`\\frac{\\Delta\\text{output}}{\\Delta\\text{input}} = \\frac{f${end} - f(${fmt(a, 2)}, ${fmt(b, 2)})}{${fmt(d.len)}} = \\frac{${fmt(d.riseSecant)}}{${fmt(d.len)}} \\approx ${fmt(d.estimate)}`}</Tex>
+              </div>
+            )}
+            <div>
+              <Tex>{`f_{${vtex}}(a,b) = \\frac{f_x v_1 + f_y v_2}{\\|\\vec v\\|} = \\frac{(${fmt(fx)})(${fmt(v[0])}) + (${fmt(fy)})(${fmt(v[1])})}{${fmt(d.len)}} = ${fmt(d.exact)}`}</Tex>
+            </div>
+            {calc.fx && calc.fy && (
+              <div className="formula-row">
+                <Tex>{`f_x = ${calc.fx.tex}, \\quad f_y = ${calc.fy.tex}`}</Tex>
+              </div>
+            )}
           </div>
         )}
       </div>
       <SlicePlot
-        title="The surface along v (z against distance from the point)"
+        title="The surface along v"
         color={C.v}
         g={(s) => f(a + u[0] * s, b + u[1] * s)}
         at={0}
@@ -114,7 +128,7 @@ export function DirectionPanels({ f, calc, a, b, fx, fy, v, u, xr, yr, zr, showF
         secant
         runLabel="Δinput = ‖v‖"
         riseLabel="Δoutput"
-        slopeText={`tangent slope ${fmt(d.exact)} · secant slope ${fmt(d.estimate)}`}
+        slopeText=""
       />
     </>
   )
@@ -230,7 +244,7 @@ export function AnglePlot({ fx, fy, theta }) {
   const r = (theta * Math.PI) / 180
   const cur = fx * Math.cos(r) + fy * Math.sin(r)
   return (
-    <Plot2D xr={[0, 360]} yr={[-top, top]} xLabel="θ°" yLabel="fᵤ" title="fᵤ = ∇f · u for every direction u (angle θ)">
+    <Plot2D xr={[0, 360]} yr={[-top, top]} xLabel="θ°" yLabel="fᵤ" title="Slope in every direction (θ = angle of u)">
       {(s) => (
         <>
           <path d={pathD(pts, s)} fill="none" stroke={C.grad} strokeWidth="3" />
@@ -257,34 +271,43 @@ export function AnglePlot({ fx, fy, theta }) {
   )
 }
 
-/** Gradient readout. */
-export function GradientReadout({ calc, a, b, fx, fy, u, theta, showFormulas, k }) {
+/** Gradient readout: ∇f and f_u by default; the full dot product behind "Show the math". */
+export function GradientReadout({ calc, a, b, fx, fy, u, theta, math, k, showU = true }) {
   const g = norm([fx, fy])
   const fu = fx * u[0] + fy * u[1]
   const angleToGrad = g > 1e-9 ? (Math.acos(Math.max(-1, Math.min(1, fu / g))) * 180) / Math.PI : NaN
   return (
     <div className="readout">
-      <div className="readout-head">
-        At <Tex>{`(a,b) = (${fmt(a, 2)},\\, ${fmt(b, 2)})`}</Tex>
+      <div className="key-numbers" style={{ color: C.grad }}>
+        <Tex>{`\\nabla f(${fmt(a, 2)},\\, ${fmt(b, 2)}) = (${fmt(fx)},\\, ${fmt(fy)})`}</Tex>
+        <span>
+          length <b>{fmt(g)}</b>
+        </span>
       </div>
-      <div style={{ color: C.grad }}>
-        <Tex>{`\\nabla f(a,b) = (f_x, f_y) = (${fmt(fx)},\\, ${fmt(fy)}), \\quad \\|\\nabla f\\| = ${fmt(g)}`}</Tex>
-      </div>
-      {showFormulas && calc.fx && calc.fy && (
-        <div className="formula-row">
-          <Tex>{`\\nabla f(x,y) = \\left(${calc.fx.tex},\\; ${calc.fy.tex}\\right)`}</Tex>
+      {showU && (
+        <div className="key-numbers" style={{ color: C.v }}>
+          <span>
+            Slope in direction <Tex>{'\\vec u'}</Tex>: <b className="big">{fmt(fu)}</b>
+          </span>
         </div>
       )}
-      <div style={{ color: C.v }}>
-        <Tex>{`\\vec u = (\\cos ${Math.round(theta)}^\\circ, \\sin ${Math.round(theta)}^\\circ) = (${fmt(u[0])},\\, ${fmt(u[1])})`}</Tex>
-      </div>
-      <div>
-        <Tex>{`f_{\\vec u}(a,b) = \\nabla f \\cdot \\vec u = (${fmt(fx)})(${fmt(u[0])}) + (${fmt(fy)})(${fmt(u[1])}) = ${fmt(fu)}`}</Tex>
-      </div>
-      <div className="help">
-        Angle between u and ∇f: {Number.isFinite(angleToGrad) ? `${Math.round(angleToGrad)}°` : '—'}.
-        {Math.abs(k - 1) > 1e-6 ? ` The ∇f arrows are drawn at ${fmt(k, 2)}× their true length so they're readable.` : ' Arrows are drawn at true length.'}
-      </div>
+      {math && (
+        <div className="math-block">
+          <div>
+            <Tex>{`\\vec u = (\\cos ${Math.round(theta)}^\\circ, \\sin ${Math.round(theta)}^\\circ) = (${fmt(u[0])},\\, ${fmt(u[1])})`}</Tex>
+          </div>
+          <div>
+            <Tex>{`f_{\\vec u} = \\nabla f \\cdot \\vec u = (${fmt(fx)})(${fmt(u[0])}) + (${fmt(fy)})(${fmt(u[1])}) = ${fmt(fu)}`}</Tex>
+          </div>
+          {calc.fx && calc.fy && (
+            <div className="formula-row">
+              <Tex>{`\\nabla f(x,y) = \\left(${calc.fx.tex},\\; ${calc.fy.tex}\\right)`}</Tex>
+            </div>
+          )}
+          <div className="help">Angle between u and ∇f: {Number.isFinite(angleToGrad) ? `${Math.round(angleToGrad)}°` : '—'}</div>
+        </div>
+      )}
+      {Math.abs(k - 1) > 1e-6 && <div className="help">∇f arrows drawn at {fmt(k, 2)}× true length.</div>}
     </div>
   )
 }

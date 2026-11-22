@@ -19,6 +19,31 @@ import ValueTable from '../components/ValueTable.jsx'
 import { FormulaInput, Slider, Toggle } from '../components/Controls.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
+
+const VIEW_NAMES = {
+  surface: '3D surface',
+  cross: 'Cross sections',
+  contour: 'Contour plot',
+  table: 'Table',
+  partials: 'Slopes',
+  direction: 'Direction',
+  gradient: 'Gradient',
+}
+
+const TOGGLE_NAMES = {
+  math: 'Show the math (formulas, estimates, second partials)',
+  tangentLines: 'Tangent lines',
+  tangentPlane: 'Tangent plane',
+  fxyGhost: 'Compare with the slice at y + Δy (fₓᵧ)',
+  walk: 'Walk on the tangent plane',
+  secant: 'Secant to the far point',
+  showU: 'Show u',
+  gradField: 'Gradient field',
+  slicePlanes: 'Slice planes',
+  levels3d: 'Level curves in 3D',
+  meshLines: 'Mesh lines',
+  trueScale: 'True z scale (no squeeze)',
+}
 import { compileFormula, partial, fmt } from '../lib/formula.js'
 import { autoZRange, autoZScale } from '../lib/view.js'
 import { autoLevels } from '../lib/contours.js'
@@ -44,15 +69,17 @@ import { AXIS_COLORS } from '../components/Axes.jsx'
  *   tangentPlane true to show the tangent plane at the point
  *   walk         [dx, dy] linear-approximation walk from the point
  *   v            direction vector [v1, v2] for 'direction' (any length; rate uses ‖v‖)
- *   vPresets     [[v1, v2], ...] quick buttons for v
  *   theta        starting angle (degrees) of the unit vector u for 'gradient'
  *   gradField    true to start with the whole gradient field on the contour plot
  *   params       [{ name, min, max, step, value, label }] extra sliders used in f
  *   markers      [[x, y, z], ...] labeled points
- *   presets      [{ name, f }] example dropdown
- *   editable     false to lock the formula
+ *   caption      one short sentence shown above the controls
+ *   controls     toggles to show up front, e.g. ['tangentPlane']; the rest live under "More"
+ *   editable     false to hide "Type your own f(x, y)"
+ *
+ * Tabs list `examples` (her worksheet functions); each example overrides any field above.
  */
-export default function FunctionExplorer({ problem }) {
+export default function FunctionExplorer({ problem, examples, exampleIndex = 0, onExample }) {
   const P = problem
   const views = P.views ?? []
   const has = (v) => views.includes(v)
@@ -73,16 +100,16 @@ export default function FunctionExplorer({ problem }) {
   const [theta, setTheta] = useState(P.theta ?? 30)
   const [opts, setOpts] = useState({
     meshLines: true,
-    slicePlanes: !P.slices, // many fixed slices + planes get too busy
+    slicePlanes: !P.slices && !P.views?.includes('partials'), // keep the 3D view uncluttered
     levels3d: has('contour'),
     tangentLines: true,
     tangentPlane: !!P.tangentPlane,
     walk: !!P.walk,
     fxyGhost: false,
-    formulas: false,
+    math: false,
     secant: true,
     gradField: !!P.gradField,
-    showU: true,
+    showU: P.showU ?? true,
     trueScale: P.zScale === 1,
     resolution: 90,
   })
@@ -168,6 +195,19 @@ export default function FunctionExplorer({ problem }) {
   const markers = P.markers ?? []
   const show2D = ['cross', 'contour', 'table', 'partials', 'direction', 'gradient'].some((k) => has(k) && shown[k])
   const usesPoint = has('partials') || has('direction') || has('gradient')
+
+  // Toggles: a few up front (config `controls`), the rest under "More".
+  const mainToggles = P.controls ?? []
+  const relevant = [
+    ...(has('partials') ? ['tangentLines', 'tangentPlane', 'fxyGhost', 'walk', 'slicePlanes'] : []),
+    ...(has('direction') ? ['secant', 'tangentPlane'] : []),
+    ...(has('gradient') ? ['showU', 'gradField'] : []),
+    ...(has('cross') ? ['slicePlanes'] : []),
+    ...(has('contour') ? ['levels3d'] : []),
+    'meshLines',
+    'trueScale',
+  ]
+  const moreToggles = [...new Set(relevant)].filter((k) => !mainToggles.includes(k))
   const hoverText = hover && `(x, y, z) = (${fmt(hover[0], 2)}, ${fmt(hover[1], 2)}, ${fmt(hover[2], 2)})`
 
   return (
@@ -226,6 +266,7 @@ export default function FunctionExplorer({ problem }) {
 
           {f &&
             has('table') &&
+            shown.table &&
             P.table.xs.flatMap((x) =>
               P.table.ys.map((y) => {
                 const hot = tableHover && tableHover[0] === x && tableHover[1] === y
@@ -306,18 +347,18 @@ export default function FunctionExplorer({ problem }) {
                 xr={xr}
                 yr={yr}
                 zr={zr}
-                showFormulas={opts.formulas}
+                math={opts.math}
                 fxyGhost={opts.fxyGhost}
                 showPlane={opts.tangentPlane}
               />
             )}
             {has('direction') && shown.direction && Number.isFinite(fx) && (
-              <DirectionPanels f={f} calc={calc} a={a} b={b} fx={fx} fy={fy} v={v} u={uV} xr={xr} yr={yr} zr={zr} showFormulas={opts.formulas} />
+              <DirectionPanels f={f} calc={calc} a={a} b={b} fx={fx} fy={fy} v={v} u={uV} xr={xr} yr={yr} zr={zr} math={opts.math} secant={opts.secant} />
             )}
             {has('gradient') && shown.gradient && Number.isFinite(fx) && (
               <>
-                <GradientReadout calc={calc} a={a} b={b} fx={fx} fy={fy} u={uT} theta={theta} showFormulas={opts.formulas} k={kGrad} />
-                <AnglePlot fx={fx} fy={fy} theta={theta} />
+                <GradientReadout calc={calc} a={a} b={b} fx={fx} fy={fy} u={uT} theta={theta} math={opts.math} k={kGrad} showU={opts.showU} />
+                {opts.showU && <AnglePlot fx={fx} fy={fy} theta={theta} />}
               </>
             )}
             {has('cross') && shown.cross && xSlices.length > 0 && (
@@ -358,44 +399,41 @@ export default function FunctionExplorer({ problem }) {
       </div>
 
       <aside className="panel">
-        {P.prompt && (
-          <div className="prompt">
-            <RichText>{P.prompt}</RichText>
-          </div>
-        )}
+        {P.caption && <p className="caption"><RichText>{P.caption}</RichText></p>}
 
-        {P.presets && (
+        {examples && examples.length > 1 && (
           <label className="control">
-            <span className="control-row">Functions</span>
-            <select
-              value={P.presets.some((p) => p.f === formula) ? formula : ''}
-              onChange={(e) => e.target.value && setFormula(e.target.value)}
-            >
-              <option value="">(custom)</option>
-              {P.presets.map((p) => (
-                <option key={p.name} value={p.f}>
-                  {p.name}
+            <span className="control-row">Example</span>
+            <select value={exampleIndex} onChange={(e) => onExample(Number(e.target.value))}>
+              {examples.map((ex, i) => (
+                <option key={i} value={i}>
+                  {ex.name}
                 </option>
               ))}
             </select>
           </label>
         )}
+        <div className="current-f">
+          <Tex>{`f(x,y) = ${compiled?.tex ?? ''}`}</Tex>
+        </div>
 
-        {P.editable === false ? (
-          <div className="control formula-fixed">
-            <Tex>{`f(x,y) = ${compiled?.tex ?? ''}`}</Tex>
-          </div>
-        ) : (
-          <FormulaInput
-            label="f(x, y) ="
-            prefix="f(x,y) = "
-            value={formula}
-            onChange={setFormula}
-            onCompiled={setCompiled}
-            vars={['x', 'y', ...params.map((p) => p.name)]}
-          />
-        )}
+        <div className="chip-row show-row">
+          <span className="chip-label">Show:</span>
+          {['surface', 'cross', 'contour', 'table', 'partials', 'direction', 'gradient']
+            .filter((k) => k === 'surface' || has(k))
+            .map((k) => (
+              <button
+                key={k}
+                className={`chip ${shown[k] ? 'on' : ''}`}
+                aria-pressed={shown[k]}
+                onClick={() => setShown((s) => ({ ...s, [k]: !s[k] }))}
+              >
+                {VIEW_NAMES[k]}
+              </button>
+            ))}
+        </div>
 
+        {/* ---- main controls: only what the idea needs ---- */}
         {params.map((p) => (
           <Slider
             key={p.name}
@@ -404,58 +442,14 @@ export default function FunctionExplorer({ problem }) {
             min={p.min}
             max={p.max}
             step={p.step ?? 0.1}
-            onChange={(v) => setPv((o) => ({ ...o, [p.name]: v }))}
+            onChange={(x) => setPv((o) => ({ ...o, [p.name]: x }))}
           />
         ))}
 
-        <div className="reveal-group">
-          <span className="control-row">Show</span>
-          <RevealButton label="3D surface" on={shown.surface} onClick={() => setShown((s) => ({ ...s, surface: !s.surface }))} />
-          {['cross', 'contour', 'table', 'partials', 'direction', 'gradient']
-            .filter(has)
-            .map((k) => (
-              <RevealButton
-                key={k}
-                label={
-                  {
-                    cross: 'Cross sections',
-                    contour: 'Contour plot',
-                    table: 'Table',
-                    partials: 'Partial derivatives',
-                    direction: 'Directional derivative',
-                    gradient: 'Gradient',
-                  }[k]
-                }
-                on={shown[k]}
-                onClick={() => setShown((s) => ({ ...s, [k]: !s[k] }))}
-              />
-            ))}
-        </div>
-
         {(usesPoint || (has('cross') && !P.slices)) && (
           <>
-            <Slider label="Point: x = a" value={a} min={xr[0]} max={xr[1]} step={0.05} onChange={(v) => setPt([v, b])} format={(v) => fmt(v, 2)} />
-            <Slider label="Point: y = b" value={b} min={yr[0]} max={yr[1]} step={0.05} onChange={(v) => setPt([a, v])} format={(v) => fmt(v, 2)} />
-          </>
-        )}
-
-        {has('partials') && (
-          <>
-            <Slider label="Step for estimates: Δx = Δy" value={h} min={0.05} max={Math.max(1, (xr[1] - xr[0]) / 4)} step={0.05} onChange={setH} format={(v) => fmt(v, 2)} />
-            <div className="toggles">
-              <Toggle label="Tangent lines" checked={opts.tangentLines} onChange={set('tangentLines')} />
-              <Toggle label="Tangent plane" checked={opts.tangentPlane} onChange={set('tangentPlane')} />
-              <Toggle label="Show how fₓ changes with y (fₓᵧ)" checked={opts.fxyGhost} onChange={set('fxyGhost')} />
-              <Toggle label="Show derivative formulas" checked={opts.formulas} onChange={set('formulas')} />
-              <Toggle label="Walk on the tangent plane" checked={opts.walk} onChange={set('walk')} />
-            </div>
-            {opts.walk && (
-              <>
-                <Slider label="Walk Δx" value={walk[0]} min={-3} max={3} step={0.1} onChange={(v) => setWalk([v, walk[1]])} format={(v) => fmt(v, 2)} />
-                <Slider label="Walk Δy" value={walk[1]} min={-3} max={3} step={0.1} onChange={(v) => setWalk([walk[0], v])} format={(v) => fmt(v, 2)} />
-                <WalkReadout f={f} a={a} b={b} fx={fx} fy={fy} dx={walk[0]} dy={walk[1]} />
-              </>
-            )}
+            <Slider label="Point: x = a" value={a} min={xr[0]} max={xr[1]} step={0.05} onChange={(x) => setPt([x, b])} format={(x) => fmt(x, 2)} />
+            <Slider label="Point: y = b" value={b} min={yr[0]} max={yr[1]} step={0.05} onChange={(y) => setPt([a, y])} format={(y) => fmt(y, 2)} />
           </>
         )}
 
@@ -463,24 +457,10 @@ export default function FunctionExplorer({ problem }) {
           <>
             <Slider label="Direction: v₁" value={v[0]} min={-6} max={6} step={0.25} onChange={(x) => setV([x, v[1]])} format={(x) => fmt(x, 2)} />
             <Slider label="Direction: v₂" value={v[1]} min={-6} max={6} step={0.25} onChange={(y) => setV([v[0], y])} format={(y) => fmt(y, 2)} />
-            {P.vPresets && (
-              <div className="chip-row">
-                {P.vPresets.map((pv) => (
-                  <button key={pv.join(',')} className={`chip ${pv[0] === v[0] && pv[1] === v[1] ? 'on' : ''}`} onClick={() => setV(pv)}>
-                    v = ({pv.map((c) => fmt(c, 2)).join(', ')})
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="toggles">
-              <Toggle label="Secant to the far point" checked={opts.secant} onChange={set('secant')} />
-              <Toggle label="Tangent plane" checked={opts.tangentPlane} onChange={set('tangentPlane')} />
-              <Toggle label="Show fₓ and f_y formulas" checked={opts.formulas} onChange={set('formulas')} />
-            </div>
           </>
         )}
 
-        {has('gradient') && (
+        {has('gradient') && opts.showU && (
           <>
             <Slider label="Direction of u: angle θ" value={theta} min={0} max={359} step={1} onChange={setTheta} format={(t) => `${Math.round(t)}°`} />
             <div className="chip-row">
@@ -492,24 +472,51 @@ export default function FunctionExplorer({ problem }) {
                 Point u along ∇f
               </button>
             </div>
-            <div className="toggles">
-              <Toggle label="Show u" checked={opts.showU} onChange={set('showU')} />
-              <Toggle label="Gradient field (on the contour plot)" checked={opts.gradField} onChange={set('gradField')} />
-              <Toggle label="Show ∇f formula" checked={opts.formulas} onChange={set('formulas')} />
-            </div>
           </>
         )}
 
-        <details className="display-opts">
-          <summary>Display options</summary>
+        {mainToggles.length > 0 && (
           <div className="toggles">
-            <Toggle label="Mesh lines" checked={opts.meshLines} onChange={set('meshLines')} />
-            {(has('cross') || has('partials')) && (
-              <Toggle label="Slice planes" checked={opts.slicePlanes} onChange={set('slicePlanes')} />
-            )}
-            {has('contour') && <Toggle label="Level curves in 3D" checked={opts.levels3d} onChange={set('levels3d')} />}
-            <Toggle label="True z scale (no squeeze)" checked={opts.trueScale} onChange={set('trueScale')} />
+            {mainToggles.map((k) => (
+              <Toggle key={k} label={TOGGLE_NAMES[k]} checked={opts[k]} onChange={set(k)} />
+            ))}
           </div>
+        )}
+
+        {has('partials') && opts.walk && (
+          <>
+            <Slider label="Walk Δx" value={walk[0]} min={-3} max={3} step={0.1} onChange={(x) => setWalk([x, walk[1]])} format={(x) => fmt(x, 2)} />
+            <Slider label="Walk Δy" value={walk[1]} min={-3} max={3} step={0.1} onChange={(y) => setWalk([walk[0], y])} format={(y) => fmt(y, 2)} />
+            <WalkReadout f={f} a={a} b={b} fx={fx} fy={fy} dx={walk[0]} dy={walk[1]} />
+          </>
+        )}
+
+        {/* ---- everything else, out of the way ---- */}
+        <details className="more">
+          <summary>More</summary>
+
+          {P.editable !== false && (
+            <FormulaInput
+              label="Type your own f(x, y)"
+              prefix="f(x,y) = "
+              value={formula}
+              onChange={setFormula}
+              onCompiled={setCompiled}
+              vars={['x', 'y', ...params.map((p) => p.name)]}
+            />
+          )}
+
+          <div className="toggles">
+            {(usesPoint || has('partials')) && <Toggle label={TOGGLE_NAMES.math} checked={opts.math} onChange={set('math')} />}
+            {moreToggles.map((k) => (
+              <Toggle key={k} label={TOGGLE_NAMES[k]} checked={opts[k]} onChange={set(k)} />
+            ))}
+          </div>
+
+          {has('partials') && (
+            <Slider label="Step for estimates: Δx = Δy" value={h} min={0.05} max={Math.max(1, (xr[1] - xr[0]) / 4)} step={0.05} onChange={setH} format={(x) => fmt(x, 2)} />
+          )}
+
           <Slider
             label="Quality (lower if slow)"
             value={opts.resolution}
@@ -517,20 +524,11 @@ export default function FunctionExplorer({ problem }) {
             max={200}
             step={10}
             onChange={set('resolution')}
-            format={(v) => `${v}×${v}`}
+            format={(x) => `${x}×${x}`}
           />
         </details>
       </aside>
     </div>
-  )
-}
-
-function RevealButton({ label, on, onClick }) {
-  return (
-    <button className={`reveal ${on ? 'on' : ''}`} onClick={onClick} aria-pressed={on}>
-      {on ? '● ' : '○ '}
-      {label}
-    </button>
   )
 }
 
@@ -578,10 +576,15 @@ function WalkReadout({ f, a, b, fx, fy, dx, dy }) {
   )
 }
 
+function Sign({ v }) {
+  const t = SIGN(v)
+  return <span className={`sign sign-${t === '+' ? 'pos' : t === '−' ? 'neg' : 'zero'}`}>{t}</span>
+}
+
 const SIGN = (v) => (!Number.isFinite(v) ? '?' : Math.abs(v) < 1e-9 ? '0' : v > 0 ? '+' : '−')
 
 /** 2D cross sections through the point with tangent line + forward-difference triangle, and the readout. */
-function PartialsPanels({ calc, a, b, h, xr, yr, zr, showFormulas, fxyGhost, showPlane }) {
+function PartialsPanels({ calc, a, b, h, xr, yr, zr, math, fxyGhost, showPlane }) {
   const f = calc.f
   const f0 = f(a, b)
   const rows = [
@@ -601,12 +604,16 @@ function PartialsPanels({ calc, a, b, h, xr, yr, zr, showFormulas, fxyGhost, sho
   return (
     <>
       <div className="readout partials-table">
-        <div className="readout-head">
-          At <Tex>{`(a,b) = (${fmt(a, 2)},\\, ${fmt(b, 2)})`}</Tex>
-        </div>
-        <div className="estimates">
-          <Tex>{`f_x \\approx \\frac{\\Delta z}{\\Delta x} = ${fmt(estX)}`}</Tex>
-          <Tex>{`f_y \\approx \\frac{\\Delta z}{\\Delta y} = ${fmt(estY)}`}</Tex>
+        <div className="key-numbers">
+          <span className="muted">
+            At <Tex>{`(${fmt(a, 2)},\\, ${fmt(b, 2)})`}</Tex>:
+          </span>
+          <span style={{ color: AXIS_COLORS.x }}>
+            <Tex>{`f_x = ${fmt(fx)}`}</Tex> <Sign v={fx} />
+          </span>
+          <span style={{ color: AXIS_COLORS.y }}>
+            <Tex>{`f_y = ${fmt(fy)}`}</Tex> <Sign v={fy} />
+          </span>
         </div>
         {showPlane && Number.isFinite(fx) && Number.isFinite(fy) && (
           <div className="plane-eq">
@@ -614,32 +621,39 @@ function PartialsPanels({ calc, a, b, h, xr, yr, zr, showFormulas, fxyGhost, sho
             <Tex>{`z = ${fmt(f0)} + ${fmt(fx)}(x - ${fmt(a, 2)}) + ${fmt(fy)}(y - ${fmt(b, 2)})`.replace(/\+ -/g, '- ').replace(/- -/g, '+ ')}</Tex>
           </div>
         )}
-        <table>
-          <tbody>
-            {rows.map(([tex, key, d]) => {
-              const v = d ? d.fn(a, b) : NaN
-              return (
-                <tr key={key}>
-                  <td>
-                    <Tex>{tex}</Tex>
-                  </td>
-                  {showFormulas && (
-                    <td className="formula-cell">
-                      <Tex>{d ? `= ${d.tex}` : ''}</Tex>
-                    </td>
-                  )}
-                  <td className="num">{fmt(v)}</td>
-                  <td>
-                    <span className={`sign sign-${SIGN(v) === '+' ? 'pos' : SIGN(v) === '−' ? 'neg' : 'zero'}`}>{SIGN(v)}</span>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        {math && (
+          <>
+            <div className="estimates">
+              <Tex>{`f_x \\approx \\frac{\\Delta z}{\\Delta x} = ${fmt(estX)}`}</Tex>
+              <Tex>{`f_y \\approx \\frac{\\Delta z}{\\Delta y} = ${fmt(estY)}`}</Tex>
+            </div>
+            <table>
+              <tbody>
+                {rows.map(([tex, key, d]) => {
+                  const val = d ? d.fn(a, b) : NaN
+                  return (
+                    <tr key={key}>
+                      <td>
+                        <Tex>{tex}</Tex>
+                      </td>
+                      <td className="formula-cell">
+                        <Tex>{d ? `= ${d.tex}` : ''}</Tex>
+                      </td>
+                      <td className="num">{fmt(val)}</td>
+                      <td>
+                        <Sign v={val} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </>
+        )}
       </div>
       <SlicePlot
-        title={`Cross section y = ${fmt(b, 2)} (move in x)`}
+        title={`Slice y = ${fmt(b, 2)}  (moving in x)`}
+        slopeText=""
         color={AXIS_COLORS.x}
         g={(t) => f(t, b)}
         at={a}
@@ -651,7 +665,8 @@ function PartialsPanels({ calc, a, b, h, xr, yr, zr, showFormulas, fxyGhost, sho
         ghost={fxyGhost ? { g: (t) => f(t, b + h), slope: calc.fx?.fn(a, b + h), label: `y = ${fmt(b + h, 2)}` } : null}
       />
       <SlicePlot
-        title={`Cross section x = ${fmt(a, 2)} (move in y)`}
+        title={`Slice x = ${fmt(a, 2)}  (moving in y)`}
+        slopeText=""
         color={AXIS_COLORS.y}
         g={(t) => f(a, t)}
         at={b}
