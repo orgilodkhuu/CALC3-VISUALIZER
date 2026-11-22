@@ -1,21 +1,17 @@
+import { useMemo } from 'react'
 import { Billboard, Line, Text } from '@react-three/drei'
+import * as THREE from 'three'
+import { ticks, tickStep } from '../lib/view.js'
 
-const AXIS_COLORS = { x: '#d62728', y: '#2ca02c', z: '#1f5fd6' }
-const DIR = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] }
+export const AXIS_COLORS = { x: '#d62728', y: '#2ca02c', z: '#1f5fd6' }
 
 // Fonts ship with the app (public/fonts) so it works offline in a classroom.
 const FONT = `${import.meta.env.BASE_URL}fonts/inter-latin-400-normal.woff`
 const FONT_BOLD = `${import.meta.env.BASE_URL}fonts/inter-latin-700-normal.woff`
 
-function tickStep(r) {
-  if (r <= 6) return 1
-  if (r <= 12) return 2
-  return 5
-}
-
 /**
- * Text that always faces the camera and is hidden behind surfaces (depth-tested).
- * Usable by any module for labeling points, vectors, etc. Coordinates are math coords.
+ * Camera-facing text, hidden behind surfaces (depth-tested). Position is in SCENE coords
+ * (already z-scaled); use useView().P to convert from math coords.
  */
 export function Label3D({ position, children, size = 0.3, color = '#2b333b', bold = false }) {
   return (
@@ -35,75 +31,84 @@ export function Label3D({ position, children, size = 0.3, color = '#2b333b', bol
   )
 }
 
-/** One axis: line through the origin, arrowhead at the + end, letter label. */
-function Axis({ name, r, s }) {
-  const dir = DIR[name]
-  const color = AXIS_COLORS[name]
-  const end = dir.map((d) => d * (r + 0.5 * s))
-  const start = dir.map((d) => d * -r)
-  // Cone geometry points along local +y; rotate it onto the axis.
-  const coneRot = { x: [0, 0, -Math.PI / 2], y: [0, 0, 0], z: [Math.PI / 2, 0, 0] }[name]
-  return (
-    <group>
-      <Line points={[start, end]} color={color} lineWidth={3} />
-      <mesh position={end} rotation={coneRot}>
-        <coneGeometry args={[0.13 * s, 0.4 * s, 20]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      <Label3D position={dir.map((d) => d * (r + 1.1 * s))} color={color} size={0.55 * s} bold>
-        {name}
-      </Label3D>
-    </group>
-  )
-}
-
-function Ticks({ name, r, s }) {
-  const dir = DIR[name]
-  // Nudge numbers off the axis line so they stay readable.
-  const off = { x: [0, -0.3, 0], y: [-0.3, 0, 0], z: [-0.3, 0.3, 0] }[name].map((v) => v * s)
-  const step = tickStep(r)
-  const out = []
-  for (let v = -Math.floor(r / step) * step; v <= r + 1e-9; v += step) {
-    if (v === 0) continue
-    out.push(
-      <group key={v}>
-        <Line
-          points={[dir.map((d) => d * v), dir.map((d, i) => d * v + off[i] * 0.35)]}
-          color="#39424c"
-          lineWidth={1.5}
-        />
-        <Label3D position={dir.map((d, i) => d * v + off[i])} size={0.26 * s}>
-          {v}
-        </Label3D>
-      </group>,
-    )
+/** Axes through the origin, spanning the plot box (and always including 0). */
+export default function Axes({ bounds, zScale = 1, showGrid = true, showTicks = true }) {
+  const span = (r) => [Math.min(r[0], 0), Math.max(r[1], 0)]
+  const ax = { x: span(bounds.x), y: span(bounds.y), z: span(bounds.z) }
+  // Scale arrows and text to the whole drawn box (including the origin), like the camera fit.
+  const diag = Math.hypot(ax.x[1] - ax.x[0], ax.y[1] - ax.y[0], (ax.z[1] - ax.z[0]) * zScale)
+  const s = diag / 10
+  const sc = (name, v) => (name === 'z' ? v * zScale : v)
+  const at = (name, v, off = [0, 0, 0]) => {
+    const p = [off[0], off[1], off[2]]
+    p[{ x: 0, y: 1, z: 2 }[name]] += sc(name, v)
+    return p
   }
-  return out
-}
 
-export default function Axes({ range, showGrid = true, showTicks = true }) {
-  const maxR = Math.max(range.x, range.y, range.z)
-  const s = Math.max(0.7, maxR / 5) // label/arrow scale so they stay readable when zoomed out
-  const gridSize = 2 * Math.ceil(Math.max(range.x, range.y))
+  const grid = useMemo(() => {
+    const pts = []
+    const xs = ticks(bounds.x[0], bounds.x[1])
+    const ys = ticks(bounds.y[0], bounds.y[1])
+    for (const x of xs) pts.push(x, bounds.y[0], 0, x, bounds.y[1], 0)
+    for (const y of ys) pts.push(bounds.x[0], y, 0, bounds.x[1], y, 0)
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
+    return g
+  }, [bounds.x, bounds.y])
+
+  const coneRot = { x: [0, 0, -Math.PI / 2], y: [0, 0, 0], z: [Math.PI / 2, 0, 0] }
+  const tickOff = { x: [0, -0.9, 0], y: [-0.9, 0, 0], z: [-0.7, 0.7, 0] }
+
   return (
     <group>
       {showGrid && (
-        // gridHelper lies in its local XZ plane; rotate it into the math xy-plane.
-        <gridHelper
-          args={[gridSize, gridSize, '#9aa3ad', '#d9dee3']}
-          rotation={[Math.PI / 2, 0, 0]}
-        />
+        <lineSegments geometry={grid}>
+          <lineBasicMaterial color="#c9d0d7" />
+        </lineSegments>
       )}
-      <Axis name="x" r={range.x} s={s} />
-      <Axis name="y" r={range.y} s={s} />
-      <Axis name="z" r={range.z} s={s} />
-      {showTicks && (
-        <>
-          <Ticks name="x" r={range.x} s={s} />
-          <Ticks name="y" r={range.y} s={s} />
-          <Ticks name="z" r={range.z} s={s} />
-        </>
-      )}
+      {['x', 'y', 'z'].map((name) => {
+        const [lo, hi] = ax[name]
+        const end = at(name, hi)
+        end[{ x: 0, y: 1, z: 2 }[name]] += 0.5 * s
+        const color = AXIS_COLORS[name]
+        // Fewer numbers on axes that are short on screen, so they don't pile up.
+        const shown = (hi - lo) * (name === 'z' ? zScale : 1)
+        const count = Math.max(2, Math.min(8, Math.round((12 * shown) / diag)))
+        const step = ticks(lo, hi, tickStep(hi - lo, count))
+        return (
+          <group key={name}>
+            <Line points={[at(name, lo), end]} color={color} lineWidth={3} />
+            <mesh position={end} rotation={coneRot[name]}>
+              <coneGeometry args={[0.13 * s, 0.4 * s, 20]} />
+              <meshBasicMaterial color={color} />
+            </mesh>
+            <Label3D
+              position={(() => {
+                const p = [...end]
+                p[{ x: 0, y: 1, z: 2 }[name]] += 0.6 * s
+                return p
+              })()}
+              color={color}
+              size={0.55 * s}
+              bold
+            >
+              {name}
+            </Label3D>
+            {showTicks &&
+              step
+                .filter((v) => v !== 0)
+                .map((v) => (
+                  <Label3D
+                    key={v}
+                    position={at(name, v, tickOff[name].map((o) => o * 0.35 * s))}
+                    size={0.27 * s}
+                  >
+                    {v}
+                  </Label3D>
+                ))}
+          </group>
+        )
+      })}
     </group>
   )
 }

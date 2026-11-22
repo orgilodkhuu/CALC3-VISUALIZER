@@ -51,7 +51,7 @@ export function FormulaInput({
     if (r.ok) {
       setError(null)
       setTex(r.tex)
-      onCompiled({ fn: r.fn, tex: r.tex })
+      onCompiled(r)
     } else {
       setError(r.error)
     }

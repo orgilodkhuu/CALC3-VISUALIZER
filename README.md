@@ -21,24 +21,39 @@ npm run build      # production build in dist/
 
 ```
 src/
-  App.jsx                 sidebar + routing (#module-id in the URL)
-  modules/index.js        module list in syllabus order  <- reorder/rename here
-  modules/Surfaces.jsx    Module 1: z = f(x, y)
-  components/Viewer3D.jsx reusable 3D stage (math coords, z up, orbit controls, reset)
-  components/Axes.jsx     axes, grid, tick numbers, Label3D for any module
-  components/Surface.jsx  surface mesh from a function, with clipping and edge handling
-  components/Controls.jsx Slider, Toggle, FormulaInput (math.js + KaTeX preview)
-  lib/formula.js          safe formula compiler: returns an error message, never throws
-public/fonts/             Inter font, bundled so labels work offline
+  App.jsx                    top bar, problem tabs, topic drawer; URL is #/<topic>/<problem>
+  topics/index.js            MATH 260 topics in syllabus order (numbers match her topic sheets)
+  topics/t02-*.js, t03-*.js  one config per topic: its problems, taken from her sheet
+  scenes/FunctionExplorer.jsx  the f: R^2 -> R scene every Topic 2/3 problem uses
+  components/Viewer3D.jsx    3D stage: math coords (z up), auto camera fit, z-squeeze, reset
+  components/Axes.jsx        axes, grid, numbers; Label3D for camera-facing text
+  components/Surface.jsx     surface mesh with clipping, domain-edge snapping, jump handling
+  components/Overlays3D.jsx  curves, points, slice planes, level curves, tangent plane
+  components/Plot2D.jsx      SVG plots: cross sections, contour map
+  components/ValueTable.jsx  click-to-reveal table of f(x, y)
+  lib/formula.js             safe formula compiler + symbolic partial derivatives (math.js)
+  lib/contours.js            marching squares for level curves
+public/fonts/                Inter font, bundled so labels work offline
 ```
 
-## Adding a module
+## Adding a problem
 
-1. Create `src/modules/MyTopic.jsx`. Put a `<Viewer3D>` on the left and an `<aside className="panel">` on the right (copy `Surfaces.jsx`).
-2. Inside `<Viewer3D>`, everything is in **math coordinates** (x, y, z with z up).
-3. Add `component: MyTopic` to its entry in `src/modules/index.js`.
+Add an entry to the topic's `problems` list (see the comment at the top of
+`src/topics/t02-functions-r2-r.js`; every field is documented in `FunctionExplorer.jsx`):
+
+```js
+{ id: '3a', title: 'Cross sections', prompt: 'Text with $math$',
+  f: 'y^3 - x^2', x: [-2, 2], y: [-2, 2],
+  views: ['cross'], hidden: ['surface'], slices: { x: [-1, 0, 1], y: [-1, 0, 1] } }
+```
+
+## Adding a topic
+
+Create `src/topics/tNN-name.js` exporting `{ problems: [...] }` and spread it into the topic's
+entry in `src/topics/index.js`. Topics that need a new kind of picture (vectors, vector fields,
+regions) get a new scene in `src/scenes/`.
 
 ## Formula syntax
 
-`^` powers, `*` multiply (`x*y`, not `xy`), `sin cos tan exp log sqrt abs`, constants `pi`, `e`.
+`^` powers, `*` multiply (`x*y`, not `xy`), `sin cos tan exp ln sqrt abs`, constants `pi`, `e`.
 A leading `z =` or `f(x,y) =` is ignored. Bad input shows a message and keeps the last good surface.

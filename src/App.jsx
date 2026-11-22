@@ -1,46 +1,62 @@
 import { useEffect, useState } from 'react'
-import { MODULES } from './modules/index.js'
+import { TOPICS } from './topics/index.js'
+import FunctionExplorer from './scenes/FunctionExplorer.jsx'
 
-// The URL hash (#surfaces) picks the module, so the professor can bookmark or share a topic.
-function useHashModule() {
-  const read = () => {
-    const id = window.location.hash.slice(1)
-    return MODULES.some((m) => m.id === id) ? id : MODULES[0].id
-  }
-  const [id, setId] = useState(read)
-  useEffect(() => {
-    const onHash = () => setId(read())
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
-  }, [])
-  return id
+/** URL: #/<topic>/<problem>, e.g. #/2/3a, so the professor can bookmark a problem. */
+function parseHash() {
+  const [, t, p] = window.location.hash.split('/')
+  const topic = TOPICS.find((x) => String(x.n) === t) ?? TOPICS.find((x) => x.problems)
+  const problem = topic.problems?.find((x) => x.id === decodeURIComponent(p ?? '')) ?? topic.problems?.[0]
+  return { topic, problem }
 }
 
+function useRoute() {
+  const [route, setRoute] = useState(parseHash)
+  useEffect(() => {
+    const on = () => setRoute(parseHash())
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
+  return route
+}
+
+const link = (t, p) => `#/${t.n}${p ? `/${encodeURIComponent(p.id)}` : ''}`
+
 export default function App() {
-  const activeId = useHashModule()
-  const [navOpen, setNavOpen] = useState(() => window.innerWidth > 900)
-  const active = MODULES.find((m) => m.id === activeId)
-  const Module = active.component
+  const { topic, problem } = useRoute()
+  const [navOpen, setNavOpen] = useState(false)
+
+  // Close the topic drawer after choosing a topic.
+  useEffect(() => setNavOpen(false), [topic.n])
 
   return (
-    <div className={`app ${navOpen ? '' : 'nav-closed'}`}>
+    <div className="app">
       <header className="topbar">
-        <button className="nav-toggle" onClick={() => setNavOpen((o) => !o)} title="Show/hide topics">
+        <button className="nav-toggle" onClick={() => setNavOpen((o) => !o)} title="All topics">
           ☰
         </button>
-        <h1>Calc 3 Visualizer</h1>
-        <span className="topbar-topic">{active.title}</span>
+        <span className="topic-num">{topic.n}.</span>
+        <h1>{topic.title}</h1>
+        {topic.problems && (
+          <nav className="tabs" aria-label="Problems">
+            {topic.problems.map((p) => (
+              <a key={p.id} href={link(topic, p)} className={p.id === problem?.id ? 'active' : ''}>
+                <b>{p.id}</b>
+                <span>{p.title}</span>
+              </a>
+            ))}
+          </nav>
+        )}
       </header>
 
-      <nav className="sidebar">
+      {navOpen && <div className="scrim" onClick={() => setNavOpen(false)} />}
+      <nav className={`drawer ${navOpen ? 'open' : ''}`} aria-label="Topics">
+        <div className="drawer-title">MATH 260 topics</div>
         <ol>
-          {MODULES.map((m) => (
-            <li key={m.id}>
-              <a
-                href={`#${m.id}`}
-                className={`${m.id === activeId ? 'active' : ''} ${m.component ? '' : 'soon'}`}
-              >
-                {m.title}
+          {TOPICS.map((t) => (
+            <li key={t.n} value={t.n}>
+              <a href={link(t)} className={`${t.n === topic.n ? 'active' : ''} ${t.problems ? '' : 'soon'}`}>
+                {t.title}
               </a>
             </li>
           ))}
@@ -48,11 +64,13 @@ export default function App() {
       </nav>
 
       <main className="content">
-        {Module ? (
-          <Module key={active.id} />
+        {problem ? (
+          <FunctionExplorer key={`${topic.n}/${problem.id}`} problem={problem} />
         ) : (
           <div className="coming-soon">
-            <h2>{active.title}</h2>
+            <h2>
+              {topic.n}. {topic.title}
+            </h2>
             <p>This topic is coming soon.</p>
           </div>
         )}
