@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { TOPICS } from './topics/index.js'
 import FunctionExplorer from './scenes/FunctionExplorer.jsx'
+import VectorsScene from './scenes/VectorsScene.jsx'
+import FieldScene from './scenes/FieldScene.jsx'
+
+// Which scene draws a tab (config `scene`); surfaces are the default.
+const SCENES = { surface: FunctionExplorer, vectors: VectorsScene, field: FieldScene }
 
 /** URL: #/<topic>/<problem>, e.g. #/2/3a, so the professor can bookmark a problem. */
 function parseHash() {
@@ -28,8 +33,9 @@ function ProblemPage({ tab }) {
   const [ex, setEx] = useState(0)
   const examples = tab.examples ?? []
   const problem = { ...tab, ...(examples[ex] ?? {}) }
+  const Scene = SCENES[tab.scene ?? 'surface']
   return (
-    <FunctionExplorer
+    <Scene
       key={ex}
       problem={problem}
       examples={examples}

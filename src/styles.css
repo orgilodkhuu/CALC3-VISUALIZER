@@ -295,3 +295,40 @@ b.big { font-size: 1.35rem; }
 details.more { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 10px; }
 details.more summary { cursor: pointer; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
 details.more[open] summary { color: var(--text); }
+
+/* ---------- 2D plane scenes (vectors, vector fields) ---------- */
+.plane-stage { position: relative; min-width: 0; min-height: 0; height: 100%; }
+.plane2d { position: absolute; inset: 0; }
+.plane2d svg { display: block; touch-action: none; user-select: none; }
+.plane-tick { font-size: 14px; fill: #59636e; }
+.plane-axis { font-size: 20px; font-style: italic; font-weight: 700; font-family: 'Times New Roman', serif; fill: #111; }
+.vec-label {
+  font-size: 22px;
+  font-weight: 700;
+  font-style: italic;
+  font-family: 'Times New Roman', serif;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 5px;
+}
+.vec-label.small { font-size: 17px; font-style: normal; font-family: inherit; }
+.handle { cursor: grab; }
+.handle:active { cursor: grabbing; }
+.plane-readout {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 1.15rem;
+  line-height: 1.75;
+  max-width: min(560px, 70%);
+}
+.plane-readout .result { font-weight: 600; }
+.plane-readout .big-result { font-size: 1.35rem; }
+.check { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e3e7ec; }
+.check-yes { color: #2a7d36; font-weight: 700; }
+.check-no { color: #c0262d; font-weight: 700; }
+.coords { display: flex; gap: 18px; font-weight: 600; font-variant-numeric: tabular-nums; margin: 4px 0 8px; }
