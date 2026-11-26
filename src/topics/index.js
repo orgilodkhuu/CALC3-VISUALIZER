@@ -5,6 +5,10 @@ import t05 from './t05-vectors.js'
 import t06 from './t06-dot-product.js'
 import t07 from './t07-gradient.js'
 import t08 from './t08-vector-fields.js'
+import t09 from './t09-line-integrals.js'
+import t10 from './t10-ftc-2d.js'
+import t13 from './t13-curl-2d.js'
+import t15 from './t15-greens-theorem.js'
 
 /**
  * MATH 260 topics in syllabus order (numbers match her topic sheets).
@@ -20,13 +24,13 @@ export const TOPICS = [
   { n: 6, title: 'Dot Products', ...t06 },
   { n: 7, title: 'The Gradient', ...t07 },
   { n: 8, title: 'Functions F: ℝ² → ℝ² (vector fields)', ...t08 },
-  { n: 9, title: 'Line Integrals' },
-  { n: 10, title: 'The 2D FTC' },
+  { n: 9, title: 'Line Integrals', ...t09 },
+  { n: 10, title: 'The 2D FTC', ...t10 },
   { n: 11, title: 'Functions f: ℝ³ → ℝ' },
   { n: 12, title: 'Functions F: ℝ³ → ℝ³' },
-  { n: 13, title: 'The 2D Curl' },
+  { n: 13, title: 'The 2D Curl', ...t13 },
   { n: 14, title: 'Double Integrals' },
-  { n: 15, title: "Green's Theorem" },
+  { n: 15, title: "Green's Theorem", ...t15 },
   { n: 16, title: 'Polar Coordinates' },
   { n: 17, title: 'The 3D Curl' },
   { n: 18, title: 'The Cross Product' },

@@ -20,6 +20,8 @@ function toTex(node) {
       .toTex({ parenthesis: 'auto', implicit: 'hide' })
       .replace(/\\log\\left\(/g, '\\ln\\left(')
       .replace(/\\mathrm\{ln\}/g, '\\ln')
+      .replace(/\\mathrm\{t\}/g, 't') // math.js typesets t as the unit "tonne"
+      .replace(/~\\(sin|cos|tan|ln)/g, '\\,\\$1')
   } catch {
     return node.toString()
   }
@@ -103,4 +105,29 @@ export function fmt(v, digits = 3) {
   if (!Number.isFinite(v)) return 'undefined'
   const r = Number(v.toFixed(digits))
   return String(Object.is(r, -0) ? 0 : r)
+}
+
+/**
+ * 2D curl of F = (F1, F2) from compiled nodes: ∂F2/∂x − ∂F1/∂y, simplified.
+ * Returns { fn, tex, d2x, d1y } (d2x, d1y: { fn, tex } for each partial) or null.
+ */
+export function curl2D(node1, node2) {
+  try {
+    const d1 = math.simplify(math.derivative(node1, 'y'))
+    const d2 = math.simplify(math.derivative(node2, 'x'))
+    const c = math.simplify(new math.OperatorNode('-', 'subtract', [d2, d1]))
+    const vars = ['x', 'y']
+    // -(2*y) reads better as -2·y
+    const neg = c.isOperatorNode && c.fn === 'unaryMinus' ? c.args[0] : null
+    const arg = neg?.isParenthesisNode ? neg.content : neg
+    const tex = arg?.isOperatorNode && arg.fn === 'multiply' ? `-${toTex(arg)}` : toTex(c)
+    return {
+      fn: makeFn(c, vars),
+      tex,
+      d2x: { fn: makeFn(d2, vars), tex: toTex(d2) },
+      d1y: { fn: makeFn(d1, vars), tex: toTex(d1) },
+    }
+  } catch {
+    return null
+  }
 }

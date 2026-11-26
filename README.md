@@ -26,6 +26,12 @@ src/
   topics/tNN-*.js            one config per topic: 2–4 idea tabs, examples from her sheet
   scenes/FunctionExplorer.jsx  the f: R^2 -> R scene (Topics 2, 3, 4, 7)
   scenes/DirectionTools.jsx  directional derivative and gradient pieces
+  scenes/VectorsScene.jsx    2D vectors with draggable tips (Topics 5, 6)
+  scenes/FieldScene.jsx      2D vector field (Topic 8)
+  scenes/LineScene.jsx       paths in a field: Riemann sum of F·Δr, r(t), FTC, path (in)dependence (Topics 9, 10)
+  scenes/CurlScene.jsx       2D curl: circulation ÷ area, paddle wheel, curl shading (Topic 13)
+  scenes/GreenScene.jsx      Green's theorem: small loops cancel; ∮ vs ∬ curl (Topic 15)
+  components/FieldLayer.jsx  shared field pieces: useField, arrows, paths, paddle wheel, curl shading
   components/Viewer3D.jsx    3D stage: math coords (z up), auto camera fit, z-squeeze, reset
   components/Axes.jsx        axes, grid, numbers; Label3D for camera-facing text
   components/Surface.jsx     surface mesh with clipping, domain-edge snapping, jump handling
@@ -34,6 +40,7 @@ src/
   components/ValueTable.jsx  click-to-reveal table of f(x, y)
   lib/formula.js             safe formula compiler + symbolic partial derivatives (math.js)
   lib/contours.js            marching squares for level curves
+  lib/paths.js               paths r(t), Riemann sums, line integrals, regions, double integrals
 public/fonts/                Inter font, bundled so labels work offline
 ```
 

@@ -3,9 +3,19 @@ import { TOPICS } from './topics/index.js'
 import FunctionExplorer from './scenes/FunctionExplorer.jsx'
 import VectorsScene from './scenes/VectorsScene.jsx'
 import FieldScene from './scenes/FieldScene.jsx'
+import LineScene from './scenes/LineScene.jsx'
+import CurlScene from './scenes/CurlScene.jsx'
+import GreenScene from './scenes/GreenScene.jsx'
 
 // Which scene draws a tab (config `scene`); surfaces are the default.
-const SCENES = { surface: FunctionExplorer, vectors: VectorsScene, field: FieldScene }
+const SCENES = {
+  surface: FunctionExplorer,
+  vectors: VectorsScene,
+  field: FieldScene,
+  line: LineScene,
+  curl: CurlScene,
+  green: GreenScene,
+}
 
 /** URL: #/<topic>/<problem>, e.g. #/2/3a, so the professor can bookmark a problem. */
 function parseHash() {
