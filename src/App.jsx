@@ -37,12 +37,23 @@ function useRoute() {
 
 /**
  * A tab plus its examples: picking an example merges its fields over the tab's defaults
- * and restarts the scene with that setup.
+ * and restarts the scene with that setup. The last choice, "Your own…" (index = examples.length),
+ * starts as a copy of the example you were on; what you type is kept in `store` (per tab),
+ * so you can switch to the worksheet examples and come back to yours.
  */
-function ProblemPage({ tab }) {
-  const [ex, setEx] = useState(0)
+function ProblemPage({ tab, store, setStore }) {
   const examples = tab.examples ?? []
-  const problem = { ...tab, ...(examples[ex] ?? {}) }
+  const OWN = examples.length
+  const ex = Math.min(store.ex ?? 0, OWN)
+  const pick = (i) => {
+    if (i === OWN && !store.custom) {
+      const { name, ...seed } = examples[ex] ?? {} // eslint-disable-line no-unused-vars
+      setStore({ ex: i, custom: seed })
+    } else setStore({ ex: i })
+  }
+  const onCustom = (patch) => setStore((s) => ({ custom: { ...s.custom, ...patch } }))
+  const problem =
+    ex === OWN && examples.length ? { ...tab, ...store.custom, isCustom: true } : { ...tab, ...(examples[ex] ?? {}) }
   const Scene = SCENES[tab.scene ?? 'surface']
   return (
     <Scene
@@ -50,7 +61,10 @@ function ProblemPage({ tab }) {
       problem={problem}
       examples={examples}
       exampleIndex={ex}
-      onExample={setEx}
+      onExample={pick}
+      onCustom={onCustom}
+      tabState={store}
+      setTabState={(patch) => setStore(patch)}
     />
   )
 }
@@ -60,6 +74,15 @@ const link = (t, p) => `#/${t.n}${p ? `/${encodeURIComponent(p.id)}` : ''}`
 export default function App() {
   const { topic, problem } = useRoute()
   const [navOpen, setNavOpen] = useState(false)
+  // Per-tab memory while the app is open: chosen example, "Your own" inputs, own path.
+  const [stores, setStores] = useState({})
+  const storeKey = problem ? `${topic.n}/${problem.id}` : ''
+  const setStore = (patch) =>
+    setStores((all) => {
+      const cur = all[storeKey] ?? {}
+      const p = typeof patch === 'function' ? patch(cur) : patch
+      return { ...all, [storeKey]: { ...cur, ...p } }
+    })
 
   // Close the topic drawer after choosing a topic.
   useEffect(() => setNavOpen(false), [topic.n])
@@ -99,7 +122,7 @@ export default function App() {
 
       <main className="content">
         {problem ? (
-          <ProblemPage key={`${topic.n}/${problem.id}`} tab={problem} />
+          <ProblemPage key={storeKey} tab={problem} store={stores[storeKey] ?? {}} setStore={setStore} />
         ) : (
           <div className="coming-soon">
             <h2>

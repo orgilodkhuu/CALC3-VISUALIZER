@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Arrow } from './Plane2D.jsx'
-import { FormulaInput } from './Controls.jsx'
-import { compileFormula, curl2D } from '../lib/formula.js'
+import { FormulaInput, useCompiled } from './Controls.jsx'
+import { curl2D } from '../lib/formula.js'
 
 /**
  * Shared pieces for scenes that draw a vector field F: R² → R² with paths on top
@@ -23,26 +23,24 @@ export const COLORS = {
 export const signColor = (v, tol = 1e-9) => (v > tol ? COLORS.plus : v < -tol ? COLORS.minus : COLORS.zero)
 
 /**
- * F from a config's F: ['-y', 'x'], with "type your own" inputs. Returns
- * { F(x, y) -> [F1, F2] | null, tex, curl: { fn, tex, ... } | null, custom, inputs (JSX for More) }.
+ * F from a config's F: ['-y', 'x']. Returns { F(x, y) -> [F1, F2] | null, tex, curl, inputs },
+ * where `inputs` are the "Your own F" formula boxes (they write to the tab's store via onCustom).
+ * The last formula that compiled stays on screen while someone is mid-typing.
  */
-export function useField(cfgF) {
-  const [F1, setF1] = useState(cfgF[0])
-  const [F2, setF2] = useState(cfgF[1])
-  const [c1, setC1] = useState(() => compileFormula(cfgF[0]))
-  const [c2, setC2] = useState(() => compileFormula(cfgF[1]))
+export function useField(cfgF, onCustom) {
+  const c1 = useCompiled(cfgF[0])
+  const c2 = useCompiled(cfgF[1])
   const ok = c1?.ok && c2?.ok
   const F = useMemo(() => (ok ? (x, y) => [c1.fn(x, y), c2.fn(x, y)] : null), [ok, c1, c2])
   const curl = useMemo(() => (ok ? curl2D(c1.node, c2.node) : null), [ok, c1, c2])
   const tex = `\\vec F(x,y) = \\left(${c1?.tex ?? '?'},\\; ${c2?.tex ?? '?'}\\right)`
-  const custom = F1 !== cfgF[0] || F2 !== cfgF[1]
-  const inputs = (
+  const inputs = onCustom ? (
     <>
-      <FormulaInput label="Type your own F₁(x, y)" prefix="F_1 = " value={F1} onChange={setF1} onCompiled={setC1} />
-      <FormulaInput label="F₂(x, y)" prefix="F_2 = " value={F2} onChange={setF2} onCompiled={setC2} />
+      <FormulaInput label="F₁(x, y)" prefix="F_1 = " value={cfgF[0]} onChange={(v) => onCustom({ F: [v, cfgF[1]] })} onCompiled={() => {}} />
+      <FormulaInput label="F₂(x, y)" help={false} prefix="F_2 = " value={cfgF[1]} onChange={(v) => onCustom({ F: [cfgF[0], v] })} onCompiled={() => {}} />
     </>
-  )
-  return { F, tex, curl, custom, inputs }
+  ) : null
+  return { F, tex, curl, inputs }
 }
 
 /** Grid points with their vectors, plus the automatic arrow scale (longest arrow ≈ 90% of spacing). */
@@ -126,7 +124,7 @@ export function PathDirection({ s, path, color = COLORS.path, count = 3, size = 
 }
 
 /**
- * Paddle wheel at p that spins at ω = curl / 2 rad/s (her sheet: curl is twice the angular velocity).
+ * Paddle wheel at p that spins at ω = curl / 2 rad/s (the worksheet: curl is twice the angular velocity).
  * Counter-clockwise for positive curl. Spin is capped so it stays watchable.
  */
 export function PaddleWheel({ s, p, curl, radius = 0.45 }) {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import Plane2D, { Arrow, Handle } from '../components/Plane2D.jsx'
-import { Slider, Toggle } from '../components/Controls.jsx'
+import { Slider, Toggle, ExamplePicker, CustomBox, RangeInputs } from '../components/Controls.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
 import { COLORS, useField, useFieldGrid, FieldArrows, PathDirection, PaddleWheel, CurlShading, signColor } from '../components/FieldLayer.jsx'
@@ -12,17 +12,17 @@ import { makePath, riemann, lineIntegral } from '../lib/paths.js'
 
 /**
  * The 2D curl (Topic 13). Config fields (examples override any):
- *   mode: 'loop'  her definition: ∮_C F·dr ÷ ΔA around a small loop at (a, b); shrink it to get curl F(a, b)
+ *   mode: 'loop'  worksheet definition: ∮_C F·dr ÷ ΔA around a small loop at (a, b); shrink it to get curl F(a, b)
  *         'map'   curl F = ∂F₂/∂x − ∂F₁/∂y everywhere (shading) with a paddle wheel you can drag
  *   F, x, y, grid, point [a, b], shape 'circle' (centered at the point) | 'square' (lower-left corner
- *   at the point, as on her sheet), size (radius R or side S), caption.
+ *   at the point, as on the worksheet), size (radius R or side S), caption.
  */
-export default function CurlScene({ problem, examples, exampleIndex = 0, onExample }) {
+export default function CurlScene({ problem, examples, exampleIndex = 0, onExample, onCustom }) {
   const cfg = problem
   const mode = cfg.mode ?? 'loop'
   const xr = cfg.x ?? [-3.5, 3.5]
   const yr = cfg.y ?? [-3.5, 3.5]
-  const field = useField(cfg.F)
+  const field = useField(cfg.F, onCustom)
   const grid = useFieldGrid(field.F, xr, yr, cfg.grid ?? 1)
   const [scale, setScale] = useState(null)
   const k = scale ?? grid.auto
@@ -109,17 +109,12 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
             <RichText>{cfg.caption}</RichText>
           </p>
         )}
-        {examples && examples.length > 1 && (
-          <label className="control">
-            <span className="control-row">Example</span>
-            <select value={exampleIndex} onChange={(e) => onExample(Number(e.target.value))}>
-              {examples.map((ex, i) => (
-                <option key={i} value={i}>
-                  {ex.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <ExamplePicker examples={examples} exampleIndex={exampleIndex} onExample={onExample} ownLabel="Your own F…" />
+        {cfg.isCustom && (
+          <CustomBox>
+            {field.inputs}
+            <RangeInputs x={xr} y={yr} onChange={onCustom} />
+          </CustomBox>
         )}
         <div className="current-f">
           <Tex>{field.tex}</Tex>
@@ -158,7 +153,6 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
             </div>
           )}
           <Slider label="Arrow length (× true length)" value={k} min={0.01} max={1} step={0.01} onChange={setScale} format={(x) => fmt(x, 2)} />
-          {field.inputs}
         </details>
       </aside>
     </div>

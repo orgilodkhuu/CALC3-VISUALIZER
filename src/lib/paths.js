@@ -3,12 +3,12 @@ import { compileFormula } from './formula.js'
 /**
  * Paths C in the plane, all turned into one shape: { r(t) -> [x, y], t0, t1, closed }.
  * Specs (used in topic configs):
- *   { type: 'param', x: 't + 2', y: 't^3 + 4', t: [-2, 2] }       her r(t) = (x(t), y(t))
+ *   { type: 'param', x: 't + 2', y: 't^3 + 4', t: [-2, 2] }       worksheet r(t) = (x(t), y(t))
  *   { type: 'line', from: [1, 2], to: [5, 1] }                      r(t) = from + t(to − from), 0 ≤ t ≤ 1
  *   { type: 'circle', c: [0, 0], r: 3, a: [0, 2π] }                 (cx + r cos t, cy + r sin t)
  *   { type: 'poly', pts: [[0,1],[6,1],[0,3]], closed: true }        straight pieces, one t-unit each
  *   { type: 'spline', pts: [P, M, ..., Q] }                         smooth curve through the points (draggable)
- * Every spec may carry a `name` (shown in the Path list) and `tex` (her formula for r(t)).
+ * Every spec may carry a `name` (shown in the Path list) and `tex` (the worksheet formula for r(t)).
  */
 export function makePath(spec) {
   if (!spec) return null
@@ -85,8 +85,8 @@ export function samplePath(path, n = 300) {
 }
 
 /**
- * Her Riemann sum with n pieces: Σ F(r_i) · Δr_i, r_i = r(t_i) at equal steps in t, Δr_i = r_{i+1} − r_i.
- * Returns the pieces too (for drawing and her table).
+ * The worksheet's Riemann sum with n pieces: Σ F(r_i) · Δr_i, r_i = r(t_i) at equal steps in t, Δr_i = r_{i+1} − r_i.
+ * Returns the pieces too (for drawing and the worksheet table).
  */
 export function riemann(F, path, n) {
   const pieces = []

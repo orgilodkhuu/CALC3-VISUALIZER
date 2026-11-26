@@ -1,4 +1,4 @@
-// Topic 7. The gradient. f_u = ∇f · u for a unit vector u (her conclusion).
+// Topic 7. The gradient. f_u = ∇f · u for a unit vector u (worksheet conclusion).
 
 export default {
   problems: [

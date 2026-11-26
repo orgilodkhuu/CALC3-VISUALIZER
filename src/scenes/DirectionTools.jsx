@@ -15,7 +15,7 @@ const norm = (v) => Math.hypot(v[0], v[1])
 
 /* ------------------------------------------------------------------ */
 /* Topic 4: directional derivative in direction v (any length)          */
-/* Her definition: rate = Δoutput / Δinput, with Δinput = ‖v‖.          */
+/* Worksheet definition: rate = Δoutput / Δinput, with Δinput = ‖v‖.          */
 /* ------------------------------------------------------------------ */
 
 export function directional(f, a, b, fx, fy, v) {
@@ -49,7 +49,7 @@ export function DirectionOverlay3D({ f, a, b, fx, fy, v, u, xr, yr, zr, secant =
     <>
       <DirectionPlane a={a} b={b} u={u} xr={xr} yr={yr} zr={zr} color={C.v} />
       <Curve3D points={curve} color={C.v} zr={zr} width={4} />
-      {/* v drawn in the input plane (z = 0), like on her contour plots */}
+      {/* v drawn in the input plane (z = 0), like on the worksheet contour plots */}
       <Arrow3D from={[a, b, 0]} to={[end[0], end[1], 0]} color={C.v} />
       <Curve3D points={[[a, b, 0], [a, b, d.f0]]} color="#888" width={1.5} dashed />
       {/* tangent-plane line: same run, rise fx·v1 + fy·v2 */}

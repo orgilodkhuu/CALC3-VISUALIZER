@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Plane2D, { Arrow, Handle } from '../components/Plane2D.jsx'
-import { Slider, Toggle } from '../components/Controls.jsx'
+import { Slider, Toggle, ExamplePicker, CustomBox, PairInput } from '../components/Controls.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
 import { fmt } from '../lib/formula.js'
@@ -23,13 +23,19 @@ const T = (a) => `(${fmt(a[0], 2)},\\, ${fmt(a[1], 2)})`
  * 2D vectors you drag by their tips. One scene, three modes (config `mode`):
  *   'ops'     c·v, v + w, w − v       (Topic 5)
  *   'length'  ‖v‖ and unit vectors     (Topic 5)
- *   'dot'     dot product as component × length (Topic 6, her definition)
+ *   'dot'     dot product as component × length (Topic 6, worksheet definition)
  * Config: x, y (visible range), v, w, op ('scale' | 'sum' | 'diff'), c, caption.
  */
-export default function VectorsScene({ problem, examples, exampleIndex = 0, onExample }) {
+export default function VectorsScene({ problem, examples, exampleIndex = 0, onExample, onCustom }) {
   const cfg = problem
-  const [v, setV] = useState(cfg.v ?? [3, 2])
-  const [w, setW] = useState(cfg.w ?? [1, 3])
+  // "Your own": v and w live in the tab's store, so typed or dragged values are kept.
+  const [vl, setVl] = useState(cfg.v ?? [3, 2])
+  const [wl, setWl] = useState(cfg.w ?? [1, 3])
+  const own = !!cfg.isCustom
+  const v = own ? cfg.v ?? [3, 2] : vl
+  const w = own ? cfg.w ?? [1, 3] : wl
+  const setV = own ? (x) => onCustom({ v: x }) : setVl
+  const setW = own ? (x) => onCustom({ w: x }) : setWl
   const [op, setOp] = useState(cfg.op ?? 'sum')
   const [c, setC] = useState(cfg.c ?? 2)
   const [L, setL] = useState(1)
@@ -202,17 +208,12 @@ export default function VectorsScene({ problem, examples, exampleIndex = 0, onEx
             <RichText>{cfg.caption}</RichText>
           </p>
         )}
-        {examples && examples.length > 1 && (
-          <label className="control">
-            <span className="control-row">Example</span>
-            <select value={exampleIndex} onChange={(e) => onExample(Number(e.target.value))}>
-              {examples.map((ex, i) => (
-                <option key={i} value={i}>
-                  {ex.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <ExamplePicker examples={examples} exampleIndex={exampleIndex} onExample={onExample} ownLabel="Your own vectors…" />
+        {own && (
+          <CustomBox>
+            <PairInput label="v" value={v} onChange={setV} />
+            {mode !== 'length' && <PairInput label="w" value={w} onChange={setW} />}
+          </CustomBox>
         )}
 
         {mode === 'ops' && (

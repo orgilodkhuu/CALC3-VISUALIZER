@@ -1,4 +1,4 @@
-// Topic 13. The 2D curl: curl F(a, b) = lim ∮_C F · dr / ΔA = ∂F₂/∂x − ∂F₁/∂y. Examples from her sheet.
+// Topic 13. The 2D curl: curl F(a, b) = lim ∮_C F · dr / ΔA = ∂F₂/∂x − ∂F₁/∂y. Examples from the worksheet.
 
 export default {
   problems: [
@@ -7,7 +7,7 @@ export default {
       title: 'Circulation ÷ area',
       scene: 'curl',
       mode: 'loop',
-      caption: 'Her definition: go around a small loop C counter-clockwise, add up F · dr, divide by the area. Shrink the loop to get curl F(a, b).',
+      caption: 'Definition from the worksheet: go around a small loop C counter-clockwise, add up F · dr, divide by the area. Shrink the loop to get curl F(a, b).',
       examples: [
         { name: '#3a: F = (−y, x), circle at (0, 0)', F: ['-y', 'x'], point: [0, 0], shape: 'circle', size: 1 },
         { name: '#3b: F = (−y, x), square at (0, 0)', F: ['-y', 'x'], point: [0, 0], shape: 'square', size: 1 },

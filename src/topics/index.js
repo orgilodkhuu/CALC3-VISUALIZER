@@ -11,7 +11,7 @@ import t13 from './t13-curl-2d.js'
 import t15 from './t15-greens-theorem.js'
 
 /**
- * MATH 260 topics in syllabus order (numbers match her topic sheets).
+ * MATH 260 topics in syllabus order (numbers match the topic worksheets).
  * A topic with `problems` gets a page; the rest show "coming soon".
  * See t02 for the problem config format.
  */

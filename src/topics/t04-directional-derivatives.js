@@ -1,4 +1,4 @@
-// Topic 4. Directional derivatives. Her definition: f_(v1,v2)(a,b) is the slope on the
+// Topic 4. Directional derivatives. Worksheet definition: f_(v1,v2)(a,b) is the slope on the
 // tangent plane from (a,b) toward (a+v1, b+v2): Δoutput / Δinput with Δinput = ‖v‖.
 
 export default {

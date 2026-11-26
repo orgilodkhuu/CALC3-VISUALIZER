@@ -22,8 +22,8 @@ npm run build      # production build in dist/
 ```
 src/
   App.jsx                    top bar, problem tabs, topic drawer; URL is #/<topic>/<problem>
-  topics/index.js            MATH 260 topics in syllabus order (numbers match her topic sheets)
-  topics/tNN-*.js            one config per topic: 2–4 idea tabs, examples from her sheet
+  topics/index.js            MATH 260 topics in syllabus order (numbers match the topic worksheets)
+  topics/tNN-*.js            one config per topic: 2–4 idea tabs, examples from the worksheet
   scenes/FunctionExplorer.jsx  the f: R^2 -> R scene (Topics 2, 3, 4, 7)
   scenes/DirectionTools.jsx  directional derivative and gradient pieces
   scenes/VectorsScene.jsx    2D vectors with draggable tips (Topics 5, 6)
@@ -46,7 +46,7 @@ public/fonts/                Inter font, bundled so labels work offline
 
 ## Adding a tab
 
-Tabs are ideas (2–4 per topic), not worksheet problems. Her worksheet functions go in `examples`.
+Tabs are ideas (2–4 per topic), not worksheet problems. Worksheet functions go in `examples`.
 Every field is documented at the top of `src/scenes/FunctionExplorer.jsx`.
 
 ```js

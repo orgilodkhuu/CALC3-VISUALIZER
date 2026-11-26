@@ -1,4 +1,4 @@
-// Topic 6. The dot product. Her definition: v · w = ‖v_w‖ ‖w‖, the length of v in the
+// Topic 6. The dot product. Worksheet definition: v · w = ‖v_w‖ ‖w‖, the length of v in the
 // direction of w times the length of w (negative when v points against w).
 
 export default {

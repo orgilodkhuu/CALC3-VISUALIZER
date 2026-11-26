@@ -1,4 +1,4 @@
-// Topic 5. Vectors in the plane. Examples come from her topic sheet.
+// Topic 5. Vectors in the plane. Examples come from the topic worksheet.
 
 export default {
   problems: [

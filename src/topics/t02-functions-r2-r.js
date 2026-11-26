@@ -1,5 +1,5 @@
 // Topic 2. Functions f: R^2 -> R.
-// Tabs are ideas, not worksheet problems. Examples come from her topic sheet.
+// Tabs are ideas, not worksheet problems. Examples come from the topic worksheet.
 //
 // Tab fields (full list in src/scenes/FunctionExplorer.jsx):
 //   id        URL slug            title    tab label

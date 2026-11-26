@@ -1,4 +1,4 @@
-// Topic 8. Vector-valued functions F: R^2 -> R^2 (vector fields). Examples from her sheet.
+// Topic 8. Vector-valued functions F: R^2 -> R^2 (vector fields). Examples from the worksheet.
 
 export default {
   problems: [

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { fmt } from '../lib/formula.js'
 
 /**
- * Table of f(x, y) laid out like her worksheets: x down the side, y across the top.
+ * Table of f(x, y) laid out like the worksheets: x down the side, y across the top.
  * Cells start hidden; click one to reveal it, or reveal all. Hovered cells highlight
  * the matching dot on the 3D surface via onHover.
  */

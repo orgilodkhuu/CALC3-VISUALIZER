@@ -16,7 +16,7 @@ import {
   gradientField,
 } from './DirectionTools.jsx'
 import ValueTable from '../components/ValueTable.jsx'
-import { FormulaInput, Slider, Toggle } from '../components/Controls.jsx'
+import { FormulaInput, Slider, Toggle, ExamplePicker, CustomBox, RangeInputs, useCompiled } from '../components/Controls.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
 
@@ -44,7 +44,7 @@ const TOGGLE_NAMES = {
   meshLines: 'Mesh lines',
   trueScale: 'True z scale (no squeeze)',
 }
-import { compileFormula, partial, fmt } from '../lib/formula.js'
+import { partial, fmt } from '../lib/formula.js'
 import { autoZRange, autoZScale } from '../lib/view.js'
 import { autoLevels } from '../lib/contours.js'
 import { viridis } from '../lib/colormap.js'
@@ -77,16 +77,15 @@ import { AXIS_COLORS } from '../components/Axes.jsx'
  *   controls     toggles to show up front, e.g. ['tangentPlane']; the rest live under "More"
  *   editable     false to hide "Type your own f(x, y)"
  *
- * Tabs list `examples` (her worksheet functions); each example overrides any field above.
+ * Tabs list `examples` (worksheet functions); each example overrides any field above.
  */
-export default function FunctionExplorer({ problem, examples, exampleIndex = 0, onExample }) {
+export default function FunctionExplorer({ problem, examples, exampleIndex = 0, onExample, onCustom }) {
   const P = problem
   const views = P.views ?? []
   const has = (v) => views.includes(v)
   const params = P.params ?? []
 
-  const [formula, setFormula] = useState(P.f)
-  const [compiled, setCompiled] = useState(() => compileFormula(P.f, ['x', 'y', ...params.map((p) => p.name)]))
+  const compiled = useCompiled(P.f, ['x', 'y', ...params.map((p) => p.name)])
   const [pv, setPv] = useState(() => Object.fromEntries(params.map((p) => [p.name, p.value])))
   const [shown, setShown] = useState(() => {
     const s = { surface: true, cross: true, contour: true, table: true, partials: true, direction: true, gradient: true }
@@ -401,17 +400,19 @@ export default function FunctionExplorer({ problem, examples, exampleIndex = 0, 
       <aside className="panel">
         {P.caption && <p className="caption"><RichText>{P.caption}</RichText></p>}
 
-        {examples && examples.length > 1 && (
-          <label className="control">
-            <span className="control-row">Example</span>
-            <select value={exampleIndex} onChange={(e) => onExample(Number(e.target.value))}>
-              {examples.map((ex, i) => (
-                <option key={i} value={i}>
-                  {ex.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <ExamplePicker examples={examples} exampleIndex={exampleIndex} onExample={onExample} ownLabel="Your own f…" />
+        {P.isCustom && (
+          <CustomBox>
+            <FormulaInput
+              label="f(x, y)"
+              prefix="f(x,y) = "
+              value={P.f}
+              onChange={(v) => onCustom({ f: v })}
+              onCompiled={() => {}}
+              vars={['x', 'y', ...params.map((p) => p.name)]}
+            />
+            <RangeInputs x={xr} y={yr} onChange={onCustom} />
+          </CustomBox>
         )}
         <div className="current-f">
           <Tex>{`f(x,y) = ${compiled?.tex ?? ''}`}</Tex>
@@ -494,17 +495,6 @@ export default function FunctionExplorer({ problem, examples, exampleIndex = 0, 
         {/* ---- everything else, out of the way ---- */}
         <details className="more">
           <summary>More</summary>
-
-          {P.editable !== false && (
-            <FormulaInput
-              label="Type your own f(x, y)"
-              prefix="f(x,y) = "
-              value={formula}
-              onChange={setFormula}
-              onCompiled={setCompiled}
-              vars={['x', 'y', ...params.map((p) => p.name)]}
-            />
-          )}
 
           <div className="toggles">
             {(usesPoint || has('partials')) && <Toggle label={TOGGLE_NAMES.math} checked={opts.math} onChange={set('math')} />}

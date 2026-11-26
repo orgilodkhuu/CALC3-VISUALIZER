@@ -11,7 +11,7 @@ function clean(input) {
     .replace(/^\s*[a-z]\s*(\([^)]*\))?\s*=\s*/i, '')
     .replace(/[−–]/g, '-')
     .replace(/[·×]/g, '*')
-    .replace(/\bln\s*\(/g, 'log(') // her sheets write ln; math.js calls it log
+    .replace(/\bln\s*\(/g, 'log(') // the worksheets write ln; math.js calls it log
 }
 
 function toTex(node) {
@@ -127,6 +127,17 @@ export function curl2D(node1, node2) {
       d2x: { fn: makeFn(d2, vars), tex: toTex(d2) },
       d1y: { fn: makeFn(d1, vars), tex: toTex(d1) },
     }
+  } catch {
+    return null
+  }
+}
+
+/** ∇f as two formula strings [f_x, f_y] (for "type your own f" in the FTC tab), or null. */
+export function gradientStrings(text) {
+  const r = compileFormula(text)
+  if (!r.ok) return null
+  try {
+    return ['x', 'y'].map((v) => math.simplify(math.derivative(r.node, v)).toString())
   } catch {
     return null
   }

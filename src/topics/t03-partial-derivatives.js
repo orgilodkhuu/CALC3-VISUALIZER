@@ -1,4 +1,4 @@
-// Topic 3. Partial derivatives. Tabs are ideas; examples come from her topic sheet.
+// Topic 3. Partial derivatives. Tabs are ideas; examples come from the topic worksheet.
 
 export default {
   problems: [

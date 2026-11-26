@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import Plane2D from '../components/Plane2D.jsx'
-import { Slider, Toggle } from '../components/Controls.jsx'
+import { Slider, Toggle, ExamplePicker, CustomBox, NumBox } from '../components/Controls.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
 import { COLORS, useField, useFieldGrid, FieldArrows, PathLine, PathDirection, CurlShading, signColor } from '../components/FieldLayer.jsx'
@@ -15,12 +15,14 @@ import { makePath, samplePath, lineIntegral, boundarySpec, doubleIntegral, regio
  *   F, x, y, grid, region ({ type: 'rect', x, y } | { type: 'poly', pts (counter-clockwise) } |
  *   { type: 'circle', c, r }), cells (n), caption.
  */
-export default function GreenScene({ problem, examples, exampleIndex = 0, onExample }) {
+export default function GreenScene({ problem, examples, exampleIndex = 0, onExample, onCustom }) {
   const cfg = problem
   const mode = cfg.mode ?? 'green'
-  const xr = cfg.x ?? [-3.5, 3.5]
-  const yr = cfg.y ?? [-3.5, 3.5]
-  const field = useField(cfg.F)
+  // "Your own": F plus a rectangle R; the view is the rectangle with a margin of 1.
+  const region = useMemo(() => (cfg.isCustom ? toRect(cfg.region) : cfg.region), [cfg.isCustom, cfg.region])
+  const xr = cfg.isCustom ? [region.x[0] - 1, region.x[1] + 1] : cfg.x ?? [-3.5, 3.5]
+  const yr = cfg.isCustom ? [region.y[0] - 1, region.y[1] + 1] : cfg.y ?? [-3.5, 3.5]
+  const field = useField(cfg.F, onCustom)
   const grid = useFieldGrid(field.F, xr, yr, cfg.grid ?? 1)
   const [scale, setScale] = useState(null)
   const k = scale ?? grid.auto
@@ -28,7 +30,6 @@ export default function GreenScene({ problem, examples, exampleIndex = 0, onExam
   const [shade, setShade] = useState(true)
   const [arrows, setArrows] = useState(true)
 
-  const region = cfg.region
   const boundary = useMemo(() => makePath(boundarySpec(region)), [region])
   const bPts = useMemo(() => samplePath(boundary, 400), [boundary])
   const lineVal = useMemo(() => (field.F ? lineIntegral(field.F, boundary) : NaN), [field.F, boundary])
@@ -111,17 +112,12 @@ export default function GreenScene({ problem, examples, exampleIndex = 0, onExam
             <RichText>{cfg.caption}</RichText>
           </p>
         )}
-        {examples && examples.length > 1 && (
-          <label className="control">
-            <span className="control-row">Example</span>
-            <select value={exampleIndex} onChange={(e) => onExample(Number(e.target.value))}>
-              {examples.map((ex, i) => (
-                <option key={i} value={i}>
-                  {ex.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <ExamplePicker examples={examples} exampleIndex={exampleIndex} onExample={onExample} ownLabel="Your own F…" />
+        {cfg.isCustom && (
+          <CustomBox>
+            {field.inputs}
+            <RectInputs region={region} onCustom={onCustom} />
+          </CustomBox>
         )}
         <div className="current-f">
           <Tex>{field.tex}</Tex>
@@ -131,7 +127,7 @@ export default function GreenScene({ problem, examples, exampleIndex = 0, onExam
             <Tex>{`\\text{curl}\\,\\vec F = ${field.curl.tex}`}</Tex>
           </div>
         )}
-        {cfg.regionText && <div className="help region-text">{cfg.regionText}</div>}
+        {cfg.regionText && !cfg.isCustom && <div className="help region-text">{cfg.regionText}</div>}
         {mode === 'cells' && <Slider label="Small squares per side" value={n} min={1} max={8} step={1} onChange={setN} />}
         <div className="toggles">
           <Toggle label="Shade by curl (red +, blue −)" checked={shade} onChange={setShade} />
@@ -141,7 +137,6 @@ export default function GreenScene({ problem, examples, exampleIndex = 0, onExam
         <details className="more">
           <summary>More</summary>
           <Slider label="Arrow length (× true length)" value={k} min={0.01} max={1} step={0.01} onChange={setScale} format={(x) => fmt(x, 2)} />
-          {field.inputs}
         </details>
       </aside>
     </div>
@@ -174,5 +169,33 @@ function CellLoop({ s, c }) {
         <polygon key={i} points={pts} fill={color} />
       ))}
     </g>
+  )
+}
+
+/** Any region → its bounding rectangle (for "Your own", which uses rectangles). */
+function toRect(region) {
+  if (!region) return { type: 'rect', x: [-1, 1], y: [-1, 1] }
+  if (region.type === 'rect') return region
+  if (region.type === 'circle') return { type: 'rect', x: [region.c[0] - region.r, region.c[0] + region.r], y: [region.c[1] - region.r, region.c[1] + region.r] }
+  const xs = region.pts.map((p) => p[0])
+  const ys = region.pts.map((p) => p[1])
+  return { type: 'rect', x: [Math.min(...xs), Math.max(...xs)], y: [Math.min(...ys), Math.max(...ys)] }
+}
+
+function RectInputs({ region, onCustom }) {
+  const set = (x, y) => x[0] < x[1] && y[0] < y[1] && onCustom({ region: { type: 'rect', x, y } })
+  const { x, y } = region
+  return (
+    <div className="control">
+      <span className="control-row">Region R: a rectangle</span>
+      <div className="two-nums">
+        <NumBox label="x from" value={x[0]} onChange={(v) => set([v, x[1]], y)} width={56} />
+        <NumBox label="to" value={x[1]} onChange={(v) => set([x[0], v], y)} width={56} />
+      </div>
+      <div className="two-nums">
+        <NumBox label="y from" value={y[0]} onChange={(v) => set(x, [v, y[1]])} width={56} />
+        <NumBox label="to" value={y[1]} onChange={(v) => set(x, [y[0], v])} width={56} />
+      </div>
+    </div>
   )
 }

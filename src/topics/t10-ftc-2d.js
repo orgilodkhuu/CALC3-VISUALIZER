@@ -1,4 +1,4 @@
-// Topic 10. The Fundamental Theorem of Calculus in 2D: ∫_C ∇f · dr = f(Q) − f(P). Examples from her sheet.
+// Topic 10. The Fundamental Theorem of Calculus in 2D: ∫_C ∇f · dr = f(Q) − f(P). Examples from the worksheet.
 
 const PI = Math.PI
 
@@ -9,20 +9,20 @@ export default {
       title: 'Any path from P to Q',
       scene: 'line',
       mode: 'ftc',
-      caption: 'For a gradient field F = ∇f, every path from P to Q gives the same answer: f(Q) − f(P). Green: level curves of f.',
+      caption: 'F = ∇f. Press Play: on every path, the integral so far equals f(here) − f(P), so all paths end at f(Q) − f(P). Green: level curves of f.',
       examples: [
         {
           name: '#2: f = x + y³, from (2, 0) to (0, 2)',
           F: ['1', '3y^2'],
           potential: 'x + y^3',
           x: [-1.5, 3.5],
-          y: [-1, 3],
+          y: [-2.2, 3],
           grid: 0.5,
           paths: [
-            { name: 'Line from P to Q (2b)', type: 'param', x: '2 - 2t', y: '2t', t: [0, 1] },
-            { name: 'Her curve (t² − t, t + 1) (2e)', type: 'param', x: 't^2 - t', y: 't + 1', t: [-1, 1] },
-            { name: 'Quarter circle (2f)', type: 'param', x: '2cos(t)', y: '2sin(t)', t: [0, PI / 2] },
-            { name: 'Bend it yourself (drag)', type: 'spline', pts: [[2, 0], [1.75, 1.75], [0, 2]] },
+            { name: 'Line from P to Q (2b)', short: 'Line', type: 'param', x: '2 - 2t', y: '2t', t: [0, 1] },
+            { name: 'Worksheet curve (2e)', short: 'Worksheet curve (2e)', type: 'param', x: 't^2 - t', y: 't + 1', t: [-1, 1] },
+            { name: 'Quarter circle (2f)', short: 'Quarter circle', type: 'param', x: '2cos(t)', y: '2sin(t)', t: [0, PI / 2] },
+            { name: 'Your bend (drag)', short: 'Your bend', type: 'spline', pts: [[2, 0], [1.75, 1.75], [0, 2]] },
           ],
         },
         {
@@ -33,8 +33,8 @@ export default {
           y: [-1, 4],
           grid: 0.5,
           paths: [
-            { name: 'Line from P to Q', type: 'param', x: '1 + 4t', y: '3 - 3t', t: [0, 1] },
-            { name: 'Bend it yourself (drag)', type: 'spline', pts: [[1, 3], [4.5, 3], [5, 0]] },
+            { name: 'Line from P to Q', short: 'Line', type: 'param', x: '1 + 4t', y: '3 - 3t', t: [0, 1] },
+            { name: 'Your bend (drag)', short: 'Your bend', type: 'spline', pts: [[1, 3], [4.5, 3], [5, 0]] },
           ],
         },
         {
@@ -44,8 +44,8 @@ export default {
           x: [-4, 4],
           y: [-4, 4],
           paths: [
-            { name: 'Line from P to Q', type: 'line', from: [-3, 3], to: [3, -2] },
-            { name: 'Bend it yourself (drag)', type: 'spline', pts: [[-3, 3], [2, 2], [3, -2]] },
+            { name: 'Line from P to Q', short: 'Line', type: 'line', from: [-3, 3], to: [3, -2] },
+            { name: 'Your bend (drag)', short: 'Your bend', type: 'spline', pts: [[-3, 3], [2, 2], [3, -2]] },
           ],
         },
       ],

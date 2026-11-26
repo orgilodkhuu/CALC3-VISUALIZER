@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import Plane2D, { Arrow, Handle } from '../components/Plane2D.jsx'
-import { FormulaInput, Slider, Toggle } from '../components/Controls.jsx'
+import { FormulaInput, Slider, Toggle, ExamplePicker, CustomBox, RangeInputs, useCompiled } from '../components/Controls.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
 import { compileFormula, partial, fmt } from '../lib/formula.js'
@@ -17,12 +17,10 @@ const CL = '#2a9d3c' // level curves of the potential f
  *         check (true = show the ∂F1/∂y vs ∂F2/∂x test), potential (formula f with ∇f = F, optional),
  *         caption. Examples override any of these.
  */
-export default function FieldScene({ problem, examples, exampleIndex = 0, onExample }) {
+export default function FieldScene({ problem, examples, exampleIndex = 0, onExample, onCustom }) {
   const cfg = problem
-  const [F1, setF1] = useState(cfg.F[0])
-  const [F2, setF2] = useState(cfg.F[1])
-  const [c1, setC1] = useState(() => compileFormula(cfg.F[0]))
-  const [c2, setC2] = useState(() => compileFormula(cfg.F[1]))
+  const c1 = useCompiled(cfg.F[0])
+  const c2 = useCompiled(cfg.F[1])
   const [probe, setProbe] = useState(cfg.probe ?? [1, 1])
   const [scale, setScale] = useState(null) // null = automatic
   const [showLevels, setShowLevels] = useState(!!cfg.potential)
@@ -66,8 +64,8 @@ export default function FieldScene({ problem, examples, exampleIndex = 0, onExam
     return { d1, d2, same }
   }, [c1, c2])
 
-  // The potential f only belongs to the example's own F, not to a typed-in one.
-  const custom = F1 !== cfg.F[0] || F2 !== cfg.F[1]
+  // The potential f only belongs to the worksheet example's F, not to a typed-in one.
+  const custom = !!cfg.isCustom
   const pot = useMemo(() => (cfg.potential && !custom ? compileFormula(cfg.potential) : null), [cfg.potential, custom])
   const levels = useMemo(() => {
     if (!pot?.ok) return null
@@ -131,17 +129,13 @@ export default function FieldScene({ problem, examples, exampleIndex = 0, onExam
             <RichText>{cfg.caption}</RichText>
           </p>
         )}
-        {examples && examples.length > 1 && (
-          <label className="control">
-            <span className="control-row">Example</span>
-            <select value={exampleIndex} onChange={(e) => onExample(Number(e.target.value))}>
-              {examples.map((ex, i) => (
-                <option key={i} value={i}>
-                  {ex.name}
-                </option>
-              ))}
-            </select>
-          </label>
+        <ExamplePicker examples={examples} exampleIndex={exampleIndex} onExample={onExample} ownLabel="Your own F…" />
+        {cfg.isCustom && (
+          <CustomBox>
+            <FormulaInput label="F₁(x, y)" prefix="F_1 = " value={cfg.F[0]} onChange={(v) => onCustom({ F: [v, cfg.F[1]] })} onCompiled={() => {}} />
+            <FormulaInput label="F₂(x, y)" help={false} prefix="F_2 = " value={cfg.F[1]} onChange={(v) => onCustom({ F: [cfg.F[0], v] })} onCompiled={() => {}} />
+            <RangeInputs x={xr} y={yr} onChange={onCustom} />
+          </CustomBox>
         )}
         <div className="current-f">
           <Tex>{`\\vec F(x,y) = \\left(${c1?.tex ?? '?'},\\; ${c2?.tex ?? '?'}\\right)`}</Tex>
@@ -164,8 +158,6 @@ export default function FieldScene({ problem, examples, exampleIndex = 0, onExam
 
         <details className="more">
           <summary>More</summary>
-          <FormulaInput label="Type your own F₁(x, y)" prefix="F_1 = " value={F1} onChange={setF1} onCompiled={setC1} />
-          <FormulaInput label="F₂(x, y)" prefix="F_2 = " value={F2} onChange={setF2} onCompiled={setC2} />
         </details>
       </aside>
     </div>

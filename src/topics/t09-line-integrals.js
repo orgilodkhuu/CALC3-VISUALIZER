@@ -1,9 +1,47 @@
-// Topic 9. Line integrals ∫_C F · dr. Examples from her sheet (problem numbers in the names).
+// Topic 9. Line integrals ∫_C F · dr. Examples from the worksheet (problem numbers in the names).
 
 const PI = Math.PI
 
 export default {
   problems: [
+    {
+      id: 'position',
+      title: 'Position vector r',
+      scene: 'line',
+      mode: 'position',
+      caption: 'The position vector r = (x, y) is the arrow from the origin to the point (x, y). Δr = rᵢ₊₁ − rᵢ is the step from one point to the next.',
+      examples: [
+        { name: '#1a: rᵢ = (5, 2), rᵢ₊₁ = (1, 4)', r1: [5, 2], r2: [1, 4], x: [-2, 7], y: [-1, 6] },
+        { name: 'Two points on the #1b worksheet curve (t = 2 and t = 4)', r1: [-3, -3], r2: [-4, -1], x: [-6, 3], y: [-5, 2] },
+      ],
+    },
+    {
+      id: 'param',
+      title: 'Parameterizing paths',
+      scene: 'line',
+      mode: 'param',
+      caption: 'As t goes from start to end, the tip of the position vector r(t) = (x(t), y(t)) traces the path. Orange: dr/dt.',
+      examples: [
+        { name: '#4a: (1 + 2t, 3 + 4t), 0 ≤ t ≤ 1', paths: [{ type: 'param', x: '1 + 2t', y: '3 + 4t', t: [0, 1] }], x: [-1, 5], y: [-1, 8] },
+        { name: 'Line from (1, 2) to (5, 7)', paths: [{ type: 'param', x: '1 + 4t', y: '2 + 5t', t: [0, 1] }], x: [-1, 7], y: [-1, 8] },
+        { name: 'Line from (5, 7) to (1, 2)', paths: [{ type: 'param', x: '5 - 4t', y: '7 - 5t', t: [0, 1] }], x: [-1, 7], y: [-1, 8] },
+        { name: '#4b: (cos t, sin t), 0 ≤ t ≤ π', paths: [{ type: 'param', x: 'cos(t)', y: 'sin(t)', t: [0, PI] }], x: [-1.6, 1.6], y: [-1.2, 1.6] },
+        { name: '(4 cos t, 4 sin t), π/2 ≤ t ≤ 3π/2', paths: [{ type: 'param', x: '4cos(t)', y: '4sin(t)', t: [PI / 2, (3 * PI) / 2] }], x: [-5, 5], y: [-5, 5] },
+        {
+          name: '(4 cos t + 5, 4 sin t − 5), −π/2 ≤ t ≤ π/2',
+          paths: [{ type: 'param', x: '4cos(t) + 5', y: '4sin(t) - 5', t: [-PI / 2, PI / 2] }],
+          x: [-1, 10],
+          y: [-10, 1],
+        },
+        {
+          name: 'Top of a circle, (3, 3) to (−3, 3)',
+          paths: [{ type: 'param', x: 'sqrt(18)cos(t)', y: 'sqrt(18)sin(t)', t: [PI / 4, (3 * PI) / 4] }],
+          x: [-5, 5],
+          y: [-1, 5],
+        },
+        { name: '#1b: (t²/4 − 2t, t − 5), 0 ≤ t ≤ 10', paths: [{ type: 'param', x: 't^2/4 - 2t', y: 't - 5', t: [0, 10] }], x: [-5, 6], y: [-6, 6] },
+      ],
+    },
     {
       id: 'sum',
       title: 'Adding up F · Δr',
@@ -78,36 +116,9 @@ export default {
         { name: 'Your own (drag the points)', type: 'spline', pts: [[-3, 1], [0, 3.5], [3, 1]] },
       ],
       examples: [
-        { name: 'Constant field, like her first picture: F = (−2, 1)', F: ['-2', '1'] },
+        { name: 'Constant field, like the first worksheet picture: F = (−2, 1)', F: ['-2', '1'] },
         { name: 'Wavy field F = (sin y, cos x)', F: ['sin(y)', 'cos(x)'] },
         { name: 'Swirl F = (−y, x)', F: ['-y', 'x'] },
-      ],
-    },
-    {
-      id: 'param',
-      title: 'Parameterizing paths',
-      scene: 'line',
-      mode: 'param',
-      caption: 'r(t) = (x(t), y(t)) moves a point along the path as t goes from start to end. Orange: dr/dt.',
-      examples: [
-        { name: '#4a: (1 + 2t, 3 + 4t), 0 ≤ t ≤ 1', paths: [{ type: 'param', x: '1 + 2t', y: '3 + 4t', t: [0, 1] }], x: [-1, 5], y: [-1, 8] },
-        { name: 'Line from (1, 2) to (5, 7)', paths: [{ type: 'param', x: '1 + 4t', y: '2 + 5t', t: [0, 1] }], x: [-1, 7], y: [-1, 8] },
-        { name: 'Line from (5, 7) to (1, 2)', paths: [{ type: 'param', x: '5 - 4t', y: '7 - 5t', t: [0, 1] }], x: [-1, 7], y: [-1, 8] },
-        { name: '#4b: (cos t, sin t), 0 ≤ t ≤ π', paths: [{ type: 'param', x: 'cos(t)', y: 'sin(t)', t: [0, PI] }], x: [-1.6, 1.6], y: [-1.2, 1.6] },
-        { name: '(4 cos t, 4 sin t), π/2 ≤ t ≤ 3π/2', paths: [{ type: 'param', x: '4cos(t)', y: '4sin(t)', t: [PI / 2, (3 * PI) / 2] }], x: [-5, 5], y: [-5, 5] },
-        {
-          name: '(4 cos t + 5, 4 sin t − 5), −π/2 ≤ t ≤ π/2',
-          paths: [{ type: 'param', x: '4cos(t) + 5', y: '4sin(t) - 5', t: [-PI / 2, PI / 2] }],
-          x: [-1, 10],
-          y: [-10, 1],
-        },
-        {
-          name: 'Top of a circle, (3, 3) to (−3, 3)',
-          paths: [{ type: 'param', x: 'sqrt(18)cos(t)', y: 'sqrt(18)sin(t)', t: [PI / 4, (3 * PI) / 4] }],
-          x: [-5, 5],
-          y: [-1, 5],
-        },
-        { name: '#1b: (t²/4 − 2t, t − 5), 0 ≤ t ≤ 10', paths: [{ type: 'param', x: 't^2/4 - 2t', y: 't - 5', t: [0, 10] }], x: [-5, 6], y: [-6, 6] },
       ],
     },
   ],
