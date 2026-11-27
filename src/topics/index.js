@@ -9,6 +9,8 @@ import t09 from './t09-line-integrals.js'
 import t10 from './t10-ftc-2d.js'
 import t13 from './t13-curl-2d.js'
 import t15 from './t15-greens-theorem.js'
+import t14 from './t14-double-integrals.js'
+import t16 from './t16-polar-coordinates.js'
 
 /**
  * MATH 260 topics in syllabus order (numbers match the topic worksheets).
@@ -29,9 +31,9 @@ export const TOPICS = [
   { n: 11, title: 'Functions f: ℝ³ → ℝ' },
   { n: 12, title: 'Functions F: ℝ³ → ℝ³' },
   { n: 13, title: 'The 2D Curl', ...t13 },
-  { n: 14, title: 'Double Integrals' },
+  { n: 14, title: 'Double Integrals', ...t14 },
   { n: 15, title: "Green's Theorem", ...t15 },
-  { n: 16, title: 'Polar Coordinates' },
+  { n: 16, title: 'Polar Coordinates', ...t16 },
   { n: 17, title: 'The 3D Curl' },
   { n: 18, title: 'The Cross Product' },
   { n: 19, title: 'Surface Integrals' },

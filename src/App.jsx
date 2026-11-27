@@ -6,6 +6,8 @@ import FieldScene from './scenes/FieldScene.jsx'
 import LineScene from './scenes/LineScene.jsx'
 import CurlScene from './scenes/CurlScene.jsx'
 import GreenScene from './scenes/GreenScene.jsx'
+import BoxesScene from './scenes/BoxesScene.jsx'
+import RegionScene from './scenes/RegionScene.jsx'
 
 // Which scene draws a tab (config `scene`); surfaces are the default.
 const SCENES = {
@@ -15,6 +17,8 @@ const SCENES = {
   line: LineScene,
   curl: CurlScene,
   green: GreenScene,
+  boxes: BoxesScene,
+  region: RegionScene,
 }
 
 /** URL: #/<topic>/<problem>, e.g. #/2/3a, so the professor can bookmark a problem. */
