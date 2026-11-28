@@ -191,3 +191,18 @@ export function useCompiled(text, vars = ['x', 'y']) {
   if (r.ok) last.current = r
   return last.current ?? r
 }
+
+/** A 3D point or vector typed as three numbers: label (a, b, c). */
+export function TripleInput({ label, value, onChange }) {
+  return (
+    <div className="control">
+      <span className="control-row">{label}</span>
+      <div className="two-nums">
+        <NumBox label="(" value={value[0]} onChange={(v) => onChange([v, value[1], value[2]])} width={52} />
+        <NumBox label="," value={value[1]} onChange={(v) => onChange([value[0], v, value[2]])} width={52} />
+        <NumBox label="," value={value[2]} onChange={(v) => onChange([value[0], value[1], v])} width={52} />
+        <span className="numbox">)</span>
+      </div>
+    </div>
+  )
+}

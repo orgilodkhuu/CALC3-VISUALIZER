@@ -33,6 +33,10 @@ src/
   scenes/GreenScene.jsx      Green's theorem: small loops cancel; ∮ vs ∬ curl (Topic 15)
   scenes/BoxesScene.jsx      double integrals as volume: 3D boxes under z = f(x, y) (Topic 14)
   scenes/RegionScene.jsx     regions from iterated-integral bounds, polar coordinates, polar wedges (Topics 14, 16)
+  scenes/Vec3Scene.jsx       3D vectors: cross product with its parallelogram, plane through three points (Topic 18)
+  scenes/Field3Scene.jsx     3D vector fields: arrows, two paths A/B, curl as the best paddle-wheel axis,
+                             flux out of a small box (Topics 12, 17, 21)
+  components/Field3.jsx      shared 3D field pieces: useField3, instanced field arrows, 3D paddle wheel
   components/BoundsInputs.jsx  "Your own" region typed as iterated-integral bounds
   components/FieldLayer.jsx  shared field pieces: useField, arrows, paths, paddle wheel, curl shading
   components/Viewer3D.jsx    3D stage: math coords (z up), auto camera fit, z-squeeze, reset
@@ -43,6 +47,7 @@ src/
   components/ValueTable.jsx  click-to-reveal table of f(x, y)
   lib/formula.js             safe formula compiler + symbolic partial derivatives (math.js)
   lib/contours.js            marching squares for level curves
+  lib/vec3.js                3D vectors, fields with symbolic curl/div, 3D paths and line integrals, box fluxes
   lib/integrals.js           bounds (dy dx, dx dy, dr dθ, dθ dr), iterated integrals, box and wedge sums
   lib/paths.js               paths r(t), Riemann sums, line integrals, regions, double integrals
 public/fonts/                Inter font, bundled so labels work offline

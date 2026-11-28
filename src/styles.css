@@ -362,3 +362,6 @@ details.more[open] summary { color: var(--text); }
 .wedge-numbers { margin-top: 6px; border-top: 1px solid var(--border); padding-top: 4px; }
 .wedge-numbers .result { font-size: 1.02rem; }
 .plane-readout.right { left: auto; right: 12px; }
+.vec-sliders { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px 0; margin-bottom: 10px; }
+.vec-sliders-title { font-size: 1.1rem; margin-bottom: 2px; }
+.vec-sliders .control { margin-bottom: 4px; }

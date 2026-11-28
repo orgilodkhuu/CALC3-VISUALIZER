@@ -23,6 +23,13 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
   const xr = cfg.x ?? [-3.5, 3.5]
   const yr = cfg.y ?? [-3.5, 3.5]
   const field = useField(cfg.F, onCustom)
+  // Divergence (Topic 21, 2D): flux out of a counter-clockwise loop, ∮ F · n ds = ∮ (−F₂, F₁) · dr,
+  // and the 2D curl of G = (−F₂, F₁) is ∂F₁/∂x + ∂F₂/∂y = div F. So "div" reuses everything with G.
+  const isDiv = cfg.quantity === 'div'
+  const fieldG = useField([`-(${cfg.F[1]})`, `${cfg.F[0]}`], null)
+  const calc = isDiv ? fieldG : field
+  const Q = isDiv ? '\\text{div}\\,\\vec F' : '\\text{curl}\\,\\vec F'
+  const loopTex = isDiv ? '\\oint_C \\vec F\\cdot \\vec n\\, ds' : '\\oint_C \\vec F\\cdot d\\vec r'
   const grid = useFieldGrid(field.F, xr, yr, cfg.grid ?? 1)
   const [scale, setScale] = useState(null)
   const k = scale ?? grid.auto
@@ -41,9 +48,9 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
       : makePath({ type: 'poly', closed: true, pts: [[a, b], [a + size, b], [a + size, b + size], [a, b + size]] })
   }, [mode, pt, shape, size])
   const area = shape === 'circle' ? Math.PI * size * size : size * size
-  const circ = useMemo(() => (loop && field.F ? lineIntegral(field.F, loop) : NaN), [loop, field.F])
-  const pieces = useMemo(() => (loop && field.F ? riemann(field.F, loop, 32).pieces : []), [loop, field.F])
-  const curlHere = field.curl ? field.curl.fn(...pt) : NaN
+  const circ = useMemo(() => (loop && calc.F ? lineIntegral(calc.F, loop) : NaN), [loop, calc.F])
+  const pieces = useMemo(() => (loop && calc.F ? riemann(calc.F, loop, 32).pieces : []), [loop, calc.F])
+  const curlHere = calc.curl ? calc.curl.fn(...pt) : NaN
   const spin = (v) => (Math.abs(v) < 1e-9 ? 'no spin' : v > 0 ? 'spins counter-clockwise' : 'spins clockwise')
 
   return (
@@ -53,14 +60,14 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
           <Plane2D xr={xr} yr={yr}>
             {(s) => (
               <>
-                {mode === 'map' && shade && <CurlShading s={s} curl={field.curl} xr={xr} yr={yr} />}
+                {(mode === 'map' || isDiv) && shade && <CurlShading s={s} curl={calc.curl} xr={xr} yr={yr} />}
                 <FieldArrows s={s} grid={grid} k={k} opacity={mode === 'loop' ? 0.5 : 0.8} />
                 {mode === 'loop' &&
                   pieces.map((p, i) => <Arrow key={i} s={s} from={p.a} to={p.b} color={signColor(p.dot)} width={6} head={0} />)}
                 {mode === 'loop' && loop && (
                   <PathDirection s={s} path={loop} color="#222" count={4} size={Math.min(16, size * s.unit * 0.5)} />
                 )}
-                {wheel && <PaddleWheel s={s} p={pt} curl={curlHere} radius={0.4} />}
+                {wheel && !isDiv && <PaddleWheel s={s} p={pt} curl={curlHere} radius={0.4} />}
                 <Handle s={s} p={pt} onChange={setPt} color={COLORS.F} label="(a, b)" />
               </>
             )}
@@ -69,15 +76,23 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
             {mode === 'loop' ? (
               <>
                 <div className="result">
-                  <Tex>{`\\oint_C \\vec F\\cdot d\\vec r = ${sig(circ)}, \\qquad \\Delta A = ${sig(area)}`}</Tex>
+                  <Tex>{`${loopTex} = ${sig(circ)}, \\qquad \\Delta A = ${sig(area)}`}</Tex>
                 </div>
                 <div className="result big-result">
-                  <Tex>{`\\frac{\\oint_C \\vec F\\cdot d\\vec r}{\\Delta A} = ${fmt(circ / area)}`}</Tex>
+                  <Tex>{`\\frac{${loopTex}}{\\Delta A} = ${fmt(circ / area)}`}</Tex>
                 </div>
                 <div className="result" style={{ color: COLORS.F }}>
-                  <Tex>{`\\text{curl}\\,\\vec F(${fmt(pt[0], 2)},\\, ${fmt(pt[1], 2)}) = ${fmt(curlHere)}`}</Tex>
+                  <Tex>{`${Q}(${fmt(pt[0], 2)},\\, ${fmt(pt[1], 2)}) = ${fmt(curlHere)}`}</Tex>
                 </div>
-                <div className="help">Shrink the loop: the ratio approaches the curl.</div>
+                <div className="help">
+                  {isDiv ? 'Green pieces: F flows out; red: in. Shrink the loop: the ratio approaches div F.' : 'Shrink the loop: the ratio approaches the curl.'}
+                </div>
+                {isDiv && shade && (
+                  <div className="legend">
+                    <span style={{ color: '#c4431f' }}>■ div &gt; 0 (spreading out)</span>
+                    <span style={{ color: '#2b6cc4' }}>■ div &lt; 0 (flowing in)</span>
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -141,15 +156,15 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
           </>
         )}
         <div className="toggles">
-          <Toggle label="Paddle wheel (spins at curl ÷ 2)" checked={wheel} onChange={setWheel} />
-          {mode === 'map' && <Toggle label="Shade by curl" checked={shade} onChange={setShade} />}
+          {!isDiv && <Toggle label="Paddle wheel (spins at curl ÷ 2)" checked={wheel} onChange={setWheel} />}
+          {(mode === 'map' || isDiv) && <Toggle label={isDiv ? 'Shade by div F' : 'Shade by curl'} checked={shade} onChange={setShade} />}
         </div>
 
         <details className="more">
           <summary>More</summary>
-          {mode === 'loop' && field.curl && (
+          {mode === 'loop' && calc.curl && (
             <div className="current-f">
-              <Tex>{`\\text{curl}\\,\\vec F = ${field.curl.tex}`}</Tex>
+              <Tex>{isDiv ? `\\text{div}\\,\\vec F = \\frac{\\partial F_1}{\\partial x} + \\frac{\\partial F_2}{\\partial y} = ${calc.curl.tex}` : `\\text{curl}\\,\\vec F = ${calc.curl.tex}`}</Tex>
             </div>
           )}
           <Slider label="Arrow length (× true length)" value={k} min={0.01} max={1} step={0.01} onChange={setScale} format={(x) => fmt(x, 2)} />

@@ -11,6 +11,10 @@ import t13 from './t13-curl-2d.js'
 import t15 from './t15-greens-theorem.js'
 import t14 from './t14-double-integrals.js'
 import t16 from './t16-polar-coordinates.js'
+import t12 from './t12-functions-r3-r3.js'
+import t17 from './t17-curl-3d.js'
+import t18 from './t18-cross-product.js'
+import t21 from './t21-divergence.js'
 
 /**
  * MATH 260 topics in syllabus order (numbers match the topic worksheets).
@@ -29,16 +33,16 @@ export const TOPICS = [
   { n: 9, title: 'Line Integrals', ...t09 },
   { n: 10, title: 'The 2D FTC', ...t10 },
   { n: 11, title: 'Functions f: ℝ³ → ℝ' },
-  { n: 12, title: 'Functions F: ℝ³ → ℝ³' },
+  { n: 12, title: 'Functions F: ℝ³ → ℝ³', ...t12 },
   { n: 13, title: 'The 2D Curl', ...t13 },
   { n: 14, title: 'Double Integrals', ...t14 },
   { n: 15, title: "Green's Theorem", ...t15 },
   { n: 16, title: 'Polar Coordinates', ...t16 },
-  { n: 17, title: 'The 3D Curl' },
-  { n: 18, title: 'The Cross Product' },
+  { n: 17, title: 'The 3D Curl', ...t17 },
+  { n: 18, title: 'The Cross Product', ...t18 },
   { n: 19, title: 'Surface Integrals' },
   { n: 20, title: "Stokes' Theorem" },
-  { n: 21, title: 'Divergence' },
+  { n: 21, title: 'Divergence', ...t21 },
   { n: 22, title: 'Triple Integrals' },
   { n: 23, title: 'The Divergence Theorem' },
   { n: 24, title: 'Cylindrical & Spherical Coordinates' },
