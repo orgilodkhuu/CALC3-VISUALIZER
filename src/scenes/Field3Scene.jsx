@@ -4,7 +4,7 @@ import Viewer3D from '../components/Viewer3D.jsx'
 import { Arrow3D, Curve3D, Point3D } from '../components/Overlays3D.jsx'
 import { Label3D } from '../components/Axes.jsx'
 import { Slider, Toggle, ExamplePicker, CustomBox, TripleInput, NumBox } from '../components/Controls.jsx'
-import { useField3, useGrid3, FieldArrows3D, PaddleWheel3D } from '../components/Field3.jsx'
+import { useField3, useGrid3, FieldArrows3D, PaddleWheel3D, DyePuff3D } from '../components/Field3.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
 import { compileFormula, fmt } from '../lib/formula.js'
@@ -378,6 +378,7 @@ function BoxFaces({ c, s, faces }) {
 function DivMode({ cfg, F, field, panelTop }) {
   const c = cfg.point ?? [0, 0, 0]
   const [s, setS] = useState(cfg.size ?? 1)
+  const [flow, setFlow] = useState(false)
   const faces = useMemo(() => (F ? boxFluxes(F, c, s) : []), [F, c[0], c[1], c[2], s]) // eslint-disable-line react-hooks/exhaustive-deps
   const total = faces.reduce((t, f) => t + f.flux, 0)
   const V = s * s * s
@@ -425,6 +426,7 @@ function DivMode({ cfg, F, field, panelTop }) {
         <Viewer3D bounds={bounds} overlay={overlay}>
           <FieldArrows3D items={items} k={k} opacity={0.35} headMax={L * 0.06} />
           <BoxFaces c={c} s={s} faces={faces} />
+          {flow && F && <DyePuff3D F={F} c={c} s={s} />}
           <FieldArrows3D items={faceArrows} k={k} color="#e4572e" opacity={1} headMax={L * 0.1} />
           <Point3D p={c} color="#e4572e" r={0.06} label="(a, b, c)" />
         </Viewer3D>
@@ -432,6 +434,10 @@ function DivMode({ cfg, F, field, panelTop }) {
       <aside className="panel">
         {panelTop}
         <Slider label="Box side (Δx = Δy = Δz)" value={s} min={0.01} max={2} step={0.01} onChange={setS} format={(v) => fmt(v, 2)} />
+        <button className={`chip play${flow ? ' on' : ''}`} onClick={() => setFlow((f) => !f)}>
+          {flow ? '■ Stop the flow' : '▶ Show the flow'}
+        </button>
+        {flow && <div className="help flow-help">A puff of dye starts in the box and F carries it. It spreads out where div F &gt; 0, squeezes together where div F &lt; 0, and keeps its size where div F = 0.</div>}
         <details className="more">
           <summary>More</summary>
           {field.ok && (

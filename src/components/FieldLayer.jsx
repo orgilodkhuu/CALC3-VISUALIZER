@@ -197,3 +197,68 @@ export function CurlShading({ s, curl, xr, yr, cell = 0.125, clip, max: fixedMax
     </g>
   )
 }
+
+/**
+ * A puff of dye released inside the loop (circle centered at p, radius `size`, or square with
+ * lower-left corner p, side `size`) and carried by F for `cycle` seconds, again and again (Topic 21, 2D).
+ * It spreads out where div F > 0 and squeezes together where div F < 0.
+ */
+export function DyePuff2D({ s, F, p, shape, size, cycle = 3.5, n = 220, color = '#e4572e' }) {
+  const seed = () => {
+    const out = []
+    while (out.length < n) {
+      if (shape === 'circle') {
+        const x = (Math.random() * 2 - 1) * size
+        const y = (Math.random() * 2 - 1) * size
+        if (x * x + y * y <= size * size) out.push([p[0] + x, p[1] + y])
+      } else out.push([p[0] + Math.random() * size, p[1] + Math.random() * size])
+    }
+    return out
+  }
+  const [state, setState] = useState(() => ({ pts: seed(), t: 0 }))
+  const span = shape === 'circle' ? 2 * size : size
+  const center = shape === 'circle' ? p : [p[0] + size / 2, p[1] + size / 2]
+  const k = useMemo(() => {
+    let m = 0
+    for (let i = -1; i <= 1; i++)
+      for (let j = -1; j <= 1; j++) {
+        const v = F(center[0] + (i * span) / 2, center[1] + (j * span) / 2)
+        if (v.every(Number.isFinite)) m = Math.max(m, Math.hypot(v[0], v[1]))
+      }
+    return m > 0 ? (1.5 * span) / (cycle * m) : 0
+  }, [F, center[0], center[1], span, cycle]) // eslint-disable-line react-hooks/exhaustive-deps
+  const kRef = useRef(k)
+  kRef.current = k
+  const seedRef = useRef(seed)
+  seedRef.current = seed
+  useEffect(() => {
+    let raf
+    let last = performance.now()
+    const tick = (now) => {
+      const dt = Math.min(0.05, (now - last) / 1000)
+      last = now
+      setState((st) => {
+        const t = st.t + dt
+        if (t >= cycle) return { pts: seedRef.current(), t: 0 }
+        const kk = kRef.current
+        const pts = st.pts.map((q) => {
+          const v1 = F(q[0], q[1])
+          const v2 = F(q[0] + 0.5 * kk * dt * v1[0], q[1] + 0.5 * kk * dt * v1[1])
+          return v2.every(Number.isFinite) ? [q[0] + kk * dt * v2[0], q[1] + kk * dt * v2[1]] : q
+        })
+        return { pts, t }
+      })
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [F, cycle])
+  const opacity = 1 - 0.6 * (state.t / cycle)
+  return (
+    <g pointerEvents="none" opacity={opacity}>
+      {state.pts.map((q, i) => (
+        <circle key={i} cx={s.x(q[0])} cy={s.y(q[1])} r={3.6} fill={color} stroke="#fff" strokeWidth={0.8} />
+      ))}
+    </g>
+  )
+}

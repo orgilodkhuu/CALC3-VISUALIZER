@@ -365,3 +365,5 @@ details.more[open] summary { color: var(--text); }
 .vec-sliders { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px 0; margin-bottom: 10px; }
 .vec-sliders-title { font-size: 1.1rem; margin-bottom: 2px; }
 .vec-sliders .control { margin-bottom: 4px; }
+.chip.play.on { background: #e4572e; color: #fff; border-color: #e4572e; }
+.flow-help { margin: 2px 0 12px; }

@@ -137,3 +137,54 @@ export function PaddleWheel3D({ p, u, omega, radius = 0.8 }) {
     </group>
   )
 }
+
+/**
+ * A puff of dye released in the box [c, c + s]³ and carried by F for `cycle` seconds, again and again.
+ * Grows where div F > 0, shrinks where div F < 0, only drifts where div F = 0 (Topic 21).
+ * Speed is scaled so the puff moves about 1.5 box sides per cycle; positions use a midpoint (RK2) step.
+ */
+export function DyePuff3D({ F, c, s, cycle = 3.5, n = 400, color = '#e4572e' }) {
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry()
+    g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(n * 3), 3))
+    return g
+  }, [n])
+  useEffect(() => () => geo.dispose(), [geo])
+  const mat = useRef()
+  const t = useRef(cycle) // start by seeding
+  const k = useMemo(() => {
+    let m = 0
+    for (let i = 0; i <= 2; i++)
+      for (let j = 0; j <= 2; j++)
+        for (let l = 0; l <= 2; l++) {
+          const v = F(c[0] + (s * i) / 2, c[1] + (s * j) / 2, c[2] + (s * l) / 2)
+          if (v.every(Number.isFinite)) m = Math.max(m, norm(v))
+        }
+    return m > 0 ? (1.5 * s) / (cycle * m) : 0
+  }, [F, c[0], c[1], c[2], s, cycle]) // eslint-disable-line react-hooks/exhaustive-deps
+  useFrame((_, dtRaw) => {
+    const dt = Math.min(dtRaw, 0.05)
+    const pos = geo.attributes.position.array
+    t.current += dt
+    if (t.current >= cycle) {
+      t.current = 0
+      for (let i = 0; i < n; i++) for (let a = 0; a < 3; a++) pos[3 * i + a] = c[a] + Math.random() * s
+    } else {
+      for (let i = 0; i < n; i++) {
+        const p = [pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]]
+        const v1 = F(...p)
+        const mid = [p[0] + 0.5 * k * dt * v1[0], p[1] + 0.5 * k * dt * v1[1], p[2] + 0.5 * k * dt * v1[2]]
+        const v2 = F(...mid)
+        if (!v2.every(Number.isFinite)) continue
+        for (let a = 0; a < 3; a++) pos[3 * i + a] = p[a] + k * dt * v2[a]
+      }
+    }
+    geo.attributes.position.needsUpdate = true
+    if (mat.current) mat.current.opacity = 1 - 0.6 * (t.current / cycle)
+  })
+  return (
+    <points geometry={geo}>
+      <pointsMaterial ref={mat} color={color} size={Math.max(s * 0.1, 0.03)} sizeAttenuation transparent depthWrite={false} />
+    </points>
+  )
+}

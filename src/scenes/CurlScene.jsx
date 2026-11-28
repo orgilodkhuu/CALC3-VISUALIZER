@@ -3,7 +3,7 @@ import Plane2D, { Arrow, Handle } from '../components/Plane2D.jsx'
 import { Slider, Toggle, ExamplePicker, CustomBox, RangeInputs } from '../components/Controls.jsx'
 import Tex from '../components/Tex.jsx'
 import RichText from '../components/RichText.jsx'
-import { COLORS, useField, useFieldGrid, FieldArrows, PathDirection, PaddleWheel, CurlShading, signColor } from '../components/FieldLayer.jsx'
+import { COLORS, useField, useFieldGrid, FieldArrows, PathDirection, PaddleWheel, CurlShading, signColor, DyePuff2D } from '../components/FieldLayer.jsx'
 import { fmt } from '../lib/formula.js'
 
 // Small loops give small numbers: keep 3 significant digits (0.0025, not 0.003).
@@ -39,6 +39,7 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
   const [size, setSize] = useState(cfg.size ?? 1)
   const [wheel, setWheel] = useState(true)
   const [shade, setShade] = useState(true)
+  const [flow, setFlow] = useState(false)
 
   const loop = useMemo(() => {
     if (mode !== 'loop') return null
@@ -67,6 +68,7 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
                 {mode === 'loop' && loop && (
                   <PathDirection s={s} path={loop} color="#222" count={4} size={Math.min(16, size * s.unit * 0.5)} />
                 )}
+                {isDiv && flow && field.F && <DyePuff2D s={s} F={field.F} p={pt} shape={shape} size={size} />}
                 {wheel && !isDiv && <PaddleWheel s={s} p={pt} curl={curlHere} radius={0.4} />}
                 <Handle s={s} p={pt} onChange={setPt} color={COLORS.F} label="(a, b)" />
               </>
@@ -153,6 +155,14 @@ export default function CurlScene({ problem, examples, exampleIndex = 0, onExamp
               onChange={setSize}
               format={(v) => fmt(v, 2)}
             />
+          </>
+        )}
+        {isDiv && (
+          <>
+            <button className={`chip play${flow ? ' on' : ''}`} onClick={() => setFlow((f) => !f)}>
+              {flow ? '■ Stop the flow' : '▶ Show the flow'}
+            </button>
+            {flow && <div className="help flow-help">A puff of dye starts inside the loop and F carries it. It spreads out where div F &gt; 0, squeezes together where div F &lt; 0, and keeps its size where div F = 0.</div>}
           </>
         )}
         <div className="toggles">
